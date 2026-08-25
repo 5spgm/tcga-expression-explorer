@@ -22,7 +22,7 @@ tcga_tool/
 ```bash
 pip install pandas openpyxl xlrd mygene
 
-python3 preprocess_tcga.py \
+python3 scripts/preprocess_tcga.py \
     --cancer-type COAD \
     --new-tpm      /path/to/20221216_COAD_TPM.xls \
     --mid-fpkmuq   /path/to/COAD_FPKM_UQ.xls \
@@ -88,15 +88,15 @@ Tumor検体を、選んだ分類方式(iCluster、MSI、CIMPなど)ごとに複�
    - Liu 2018: Table S1 (`mmc2.xlsx`, "Master Patient Table"シート)
 2. 汎用フォーマット(`patient_id,subtype`の2列CSV)に変換する:
    ```bash
-   python3 make_icluster_subtype_table.py --input mmc6.xlsx --output icluster_subtypes.csv
-   python3 make_liu_subtype_tables.py --input mmc2.xlsx --out-dir ./subtypes
+   python3 scripts/make_icluster_subtype_table.py --input mmc6.xlsx --output icluster_subtypes.csv
+   python3 scripts/make_liu_subtype_tables.py --input mmc2.xlsx --out-dir ./subtypes
    ```
    後者は `subtypes/Molecular_Subtype.csv`, `MSI_Status.csv`, `CIMP.csv`,
    `Colorectal_CMS.csv` の4ファイルを一度に生成する。
 
    乳がんのTNBC分類は、論文ではなくBCRのclinical patientファイルから作る:
    ```bash
-   python3 make_tnbc_subtype_table.py \
+   python3 scripts/make_tnbc_subtype_table.py \
        --input nationwidechildrens_org_clinical_patient_brca.txt \
        --output subtypes/BRCA_TNBC.csv \
        --detail-csv subtypes/BRCA_TNBC_detail.csv
@@ -116,7 +116,7 @@ Tumor検体を、選んだ分類方式(iCluster、MSI、CIMPなど)ごとに複�
    Thorsson 2018 の Supplementary Table (`mmc2.xlsx`, シート `PanImmune_MS`)
    からは、1ファイルで**2種類**の分類が取り出せる:
    ```bash
-   python3 make_immune_subtype_tables.py --input mmc2.xlsx --out-dir ./subtypes
+   python3 scripts/make_immune_subtype_tables.py --input mmc2.xlsx --out-dir ./subtypes
    ```
    - `subtypes/Immune_Subtype.csv` — 免疫サブタイプ C1-C6。全33がん種横断
      なので、iClusterと同じくどのがん種でも使い回せる(9,126患者)。
@@ -130,12 +130,12 @@ Tumor検体を、選んだ分類方式(iCluster、MSI、CIMPなど)ごとに複�
 
    > PAM50の `Normal`(Normal-like)は、正常組織の混入によるアーティファクト
    > の可能性が指摘されている群。解釈の際は留意すること。
-3. `preprocess_tcga.py` に `--tumor-subtype-table "表示名=path.csv"` を
+3. `scripts/preprocess_tcga.py` に `--tumor-subtype-table "表示名=path.csv"` を
    **必要な数だけ繰り返し指定**する(表示名がプルダウンの選択肢になる)。
    末尾に `:数字` を付けると、そのスキームだけ専用の `--min-subtype-n` を
    指定できる(省略時は共通の `--min-subtype-n` に従う):
    ```bash
-   python3 preprocess_tcga.py \
+   python3 scripts/preprocess_tcga.py \
        --cancer-type COAD \
        --new-tpm ... --mid-fpkmuq ... --old-normcount ... \
        --tumor-subtype-table "iCluster (Hoadley 2018)=icluster_subtypes.csv" \
@@ -255,17 +255,17 @@ GDCのsample sheet(またはGDC APIの `samples.is_ffpe`)からFFPE検体の
 > (`nationwidechildrens_org_biospecimen_sample_brca.txt`、`is_ffpe` 列)
 > か、GDCのsample sheetを使うこと。
 
-同梱の `make_ffpe_exclude_list.py` が、BCR biospecimen形式・GDC sample sheet
+同梱の `scripts/make_ffpe_exclude_list.py` が、BCR biospecimen形式・GDC sample sheet
 形式のどちらでも列名を自動検出して除外リストを作る(3行ヘッダーのBCR形式にも
 対応済み):
 
 ```bash
-python3 make_ffpe_exclude_list.py \
+python3 scripts/make_ffpe_exclude_list.py \
     --input nationwidechildrens_org_biospecimen_sample_brca.txt \
     --output ffpe_exclude_brca.txt
 # 列名が想定と違う場合は --barcode-column / --ffpe-column で明示指定できる
 
-python3 preprocess_tcga.py \
+python3 scripts/preprocess_tcga.py \
     --cancer-type BRCA \
     --new-tpm ... --mid-fpkm ... --old-normcount ... \
     --exclude-samples ffpe_exclude_brca.txt \
@@ -285,12 +285,12 @@ python3 preprocess_tcga.py \
 「どのファイルを読むか」を選ぶ工程がある。ここでの選び方を誤ると、特定の
 検体や患者が**警告なしに**消えるが、出来上がった行列を見ただけでは気づけない。
 
-`check_rnaseq_list.py` は、GDC sample sheet を読んで
+`scripts/check_rnaseq_list.py` は、GDC sample sheet を読んで
 `20250913_RNAseq_list.R` の選別ロジックを再現し、どの検体・どの患者が
 落ちるかを一覧表示したうえで、修正版の検体リストを出力する。
 
 ```bash
-python3 check_rnaseq_list.py \
+python3 scripts/check_rnaseq_list.py \
     --sample-sheet gdc_sample_sheet.2025-09-13.tsv \
     --output corrected_file_list.tsv
 ```
