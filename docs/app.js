@@ -5,7 +5,7 @@
 // 末尾にスラッシュを付けないこと(下の fetch 側が `${DATA_BASE_URL}/...` の形で組み立てる)。
 // (自前サーバー側で Access-Control-Allow-Origin ヘッダの設定と、HTTPS化が必要。
 //  詳細はREADMEの「3. データを自前サーバーに置く場合」を参照)
-const DATA_BASE_URL = "https://importantly-ministers-inquiry-through.trycloudflare.com/data";
+const DATA_BASE_URL = "https://pub-19864563e9014e228cefc601d77adfbc.r2.dev";
 
 // 非がん部の箱に使う名前。単に "Normal" にすると、PAM50の "Normal"
 // (Normal-like)のようにsubtype側に同名のラベルがある場合、Plotlyが同じ
