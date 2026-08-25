@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TCGA Expression Explorer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <h1>TCGA Expression Explorer</h1>
+    <p class="subtitle" data-i18n="subtitle"></p>
+    <!-- 言語切替。選択はブラウザに記憶される -->
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" data-lang="ja">日本語</button>
+      <button type="button" data-lang="en">English</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="controls">
+    <div class="control-group">
+      <label for="cancer-select" data-i18n="cancerLabel"></label>
+      <select id="cancer-select"><option value=""></option></select>
+    </div>
+
+    <div class="control-group gene-group">
+      <label for="gene-input" data-i18n="geneLabel"></label>
+      <input id="gene-input" type="text" list="gene-list" autocomplete="off" disabled>
+      <datalist id="gene-list"></datalist>
+    </div>
+
+    <div class="control-group subtype-group">
+      <label for="subtype-scheme-select" data-i18n="subtypeLabel"></label>
+      <select id="subtype-scheme-select" disabled></select>
+    </div>
+
+    <div class="control-group scale-group">
+      <label for="extra-tumor-toggle" id="extra-tumor-label">
+        <input type="checkbox" id="extra-tumor-toggle" disabled>
+        <span data-i18n="extraTumor"></span>
+      </label>
+    </div>
+
+    <div class="control-group scale-group">
+      <label for="log-scale-toggle">
+        <input type="checkbox" id="log-scale-toggle" checked>
+        <span data-i18n="logScale"></span>
+      </label>
+    </div>
+
+    <div class="control-group status-group">
+      <span id="status-line" class="status-line"></span>
+    </div>
+  </section>
+
+  <section id="panels" class="panels" aria-live="polite">
+    <article class="panel" data-gen="old">
+      <div class="panel-eyebrow">
+        <span class="gen-label" data-i18n="genOld"></span>
+        <span class="gen-meta">UNC IlluminaHiSeq RNASeqV2 · 2015</span>
+      </div>
+      <div class="value-type-row" id="old-value-type-row"></div>
+      <div class="plot" id="plot-old"></div>
+      <div class="download-row" id="download-old"></div>
+      <div class="panel-footnote" id="footnote-old"></div>
+    </article>
+
+    <article class="panel" data-gen="mid">
+      <div class="panel-eyebrow">
+        <span class="gen-label" data-i18n="genMid"></span>
+        <span class="gen-meta">GDC HTSeq · DR15–31</span>
+      </div>
+      <div class="value-type-row" id="mid-value-type-row"></div>
+      <div class="plot" id="plot-mid"></div>
+      <div class="download-row" id="download-mid"></div>
+      <div class="panel-footnote" id="footnote-mid"></div>
+    </article>
+
+    <article class="panel" data-gen="new">
+      <div class="panel-eyebrow">
+        <span class="gen-label" data-i18n="genNew"></span>
+        <span class="gen-meta">GDC STAR-Counts · DR32+ / 2022</span>
+      </div>
+      <div class="value-type-row" id="new-value-type-row"></div>
+      <div class="plot" id="plot-new"></div>
+      <div class="download-row" id="download-new"></div>
+      <div class="panel-footnote" id="footnote-new"></div>
+    </article>
+  </section>
+
+  <p class="empty-state" id="empty-state" data-i18n="emptyState"></p>
+</main>
+
+<footer class="page-footer">
+  <span data-i18n="footerSource"></span>
+</footer>
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="i18n.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

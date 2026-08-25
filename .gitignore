@@ -1,0 +1,46 @@
+# =====================================================================
+# 公開リポジトリに入れてはいけないもの
+# =====================================================================
+
+# --- 生成データ(巨大。自前サーバーで配信する) ---
+# 遺伝子ごとのJSONは1がん種あたり約60,660ファイル・1.7GB。
+# GitHubの容量制限を大きく超えるうえ、Pagesのビルドも通らない。
+site/data/
+docs/data/
+tcga_data/
+data/
+
+# --- 元データ(発現行列) ---
+# GDC/Xenaから再取得できるものなので、リポジトリに含めない。
+tcga_matrix/
+*.xlsx
+*.xls
+!docs/**/*.xlsx
+
+# --- 論文の補足資料と、そこから作った分類表 ---
+# 出版社の著作物なので再配布しない。変換スクリプトだけ公開すれば
+# 各自が同じものを再現できる。
+tcga_ref/
+subtypes/
+icluster_subtypes.csv
+mmc*.xlsx
+1-s2_0-*.xlsx
+
+# --- TCGAの臨床・検体メタデータ ---
+# open accessではあるが、原典から取得すべきものなので置かない。
+nationwidechildrens_org_*.txt
+gdc_sample_sheet*.tsv
+ffpe_exclude_*.txt
+corrected_file_list*.tsv
+
+# --- 実行時に生成される中間物 ---
+entrez_cache.json
+run_*.log
+*.tsv
+!corrected_file_list_example.tsv
+
+# --- その他 ---
+__pycache__/
+*.pyc
+.DS_Store
+.ipynb_checkpoints/

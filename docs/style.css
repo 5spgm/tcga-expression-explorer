@@ -1,0 +1,304 @@
+:root {
+  --bg: #f5f6f3;
+  --paper: #fbfbf9;
+  --ink: #1b231f;
+  --muted: #62695f;
+  --rule: #d8dad3;
+  --rule-strong: #b9bcb2;
+  --accent: #0f5257;
+  --accent-soft: #dce9e8;
+  --tumor: #c1440e;
+  --tumor-soft: #f4ddd0;
+  --normal: #2e7d6b;
+  --normal-soft: #dbe9e3;
+
+  /* 英数字はArial、日本語はOS標準の和文フォントに落とす。
+     CSSのfont-familyは文字ごとに前から順に解決されるため、この並びだと
+     ラテン文字はArial、かなや漢字はHiragino/Yu Gothic等が使われる。
+     図の書き出し(SVG/PNG)もこの指定に従うので、論文図版の慣習に合う。 */
+  --font-latin: Arial, Helvetica, "Helvetica Neue", sans-serif;
+  --font-jp: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic",
+             "Noto Sans JP", "Meiryo", sans-serif;
+  --font-display: Arial, Helvetica, "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --font-ui: Arial, Helvetica, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif;
+  --font-mono: "Courier New", Consolas, ui-monospace, monospace;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Masthead ---------- */
+.masthead {
+  border-bottom: 1px solid var(--rule-strong);
+  background: var(--paper);
+}
+.masthead-inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 2.6rem 1.5rem 1.6rem;
+}
+.masthead h1 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(1.8rem, 3vw, 2.4rem);
+  margin: 0 0 0.4rem;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0;
+  letter-spacing: 0.01em;
+}
+
+/* ---------- Main / Controls ---------- */
+main {
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 1.8rem 1.5rem 3rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1.6rem;
+  padding: 1.2rem 1.4rem;
+  background: var(--paper);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  margin-bottom: 1.8rem;
+}
+.control-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.control-group label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 500;
+}
+.gene-group { flex: 1 1 260px; min-width: 220px; }
+.status-group { flex: 1 1 200px; justify-content: center; }
+.subtype-group { min-width: 220px; }
+.subtype-group select { min-width: 220px; }
+.scale-group { justify-content: center; }
+.scale-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-transform: none;
+  letter-spacing: normal;
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.scale-group input[type="checkbox"] { width: 15px; height: 15px; cursor: pointer; }
+.scale-group label.is-disabled { opacity: 0.4; cursor: not-allowed; }
+.scale-group label.is-disabled input[type="checkbox"] { cursor: not-allowed; }
+
+select, input[type="text"] {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  padding: 0.5rem 0.6rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 3px;
+  background: #fff;
+  color: var(--ink);
+  min-width: 200px;
+}
+select:disabled, input:disabled {
+  color: var(--muted);
+  background: #f1f1ee;
+}
+
+.status-line {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.status-line.error { color: var(--tumor); }
+
+/* ---------- Panels ---------- */
+.panels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0;
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.panel {
+  padding: 1.2rem 1.2rem 1.4rem;
+  border-left: 1px solid var(--rule);
+}
+.panel:first-child { border-left: none; }
+
+.panel-eyebrow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin-bottom: 0.7rem;
+  padding-bottom: 0.6rem;
+  border-bottom: 1px solid var(--rule);
+}
+.gen-label {
+  font-family: var(--font-display);
+  font-style: normal;
+  font-size: 1.15rem;
+}
+.gen-meta {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+
+.value-type-row {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.6rem;
+  min-height: 1.6rem;
+}
+.value-type-row button {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  border: 1px solid var(--rule-strong);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.22rem 0.7rem;
+  cursor: pointer;
+}
+.value-type-row button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+/* 値の種類が1つしかない場合、押せるボタンではなく静的な表示にする。
+   がん種によって FPKM / FPKM-UQ が違うため、常に何の値かを明示する。 */
+.value-type-row .value-type-static {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  border: 1px solid var(--rule-strong);
+  border-radius: 999px;
+  padding: 0.22rem 0.7rem;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.plot {
+  width: 100%;
+  height: 320px;
+}
+
+.panel-footnote {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+  min-height: 1rem;
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  padding: 2.2rem 1rem;
+  border: 1px dashed var(--rule-strong);
+  border-radius: 4px;
+  margin-top: 1.2rem;
+}
+
+.page-footer {
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  padding: 1.4rem;
+  border-top: 1px solid var(--rule);
+}
+
+@media (max-width: 860px) {
+  .panels { grid-template-columns: 1fr; }
+  .panel { border-left: none; border-top: 1px solid var(--rule); }
+  .panel:first-child { border-top: none; }
+}
+
+/* ---------- 言語切替 ---------- */
+.lang-switch {
+  display: flex;
+  gap: 0.25rem;
+  margin-top: 0.6rem;
+}
+.lang-switch button {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  border: 1px solid var(--rule-strong);
+  background: transparent;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  cursor: pointer;
+}
+.lang-switch button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ---------- グラフの保存ボタン ---------- */
+.download-row {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+  margin: 0.5rem 0 0.2rem;
+  min-height: 1.5rem;
+}
+.download-label {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-right: 0.15rem;
+}
+.download-row button {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  border: 1px solid var(--rule);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 3px;
+  padding: 0.18rem 0.55rem;
+  cursor: pointer;
+}
+.download-row button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ---------- 小サンプル警告 ---------- */
+.panel-footnote.has-warning {
+  color: #a35a12;
+}

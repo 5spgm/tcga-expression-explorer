@@ -1,0 +1,168 @@
+// ============================================================
+// 表示文字列と、がん種コードの対訳表
+// ============================================================
+// app.js から参照する。文言を直したいときは基本ここだけ触ればよい。
+
+// --- がん種コード -> 表示名 -------------------------------------------
+// 略称(PAAD, LUAD…)はドライ解析の慣用表記で、専門外には通じにくい。
+// 疾患名を主・略称を従にして「膵臓がん (PAAD)」の形で表示する。
+// ここに無いコードは、コードそのものをそのまま表示する(害はない)。
+const CANCER_LABELS = {
+  ACC:  { ja: "副腎皮質がん",             en: "Adrenocortical carcinoma" },
+  BLCA: { ja: "膀胱がん",                 en: "Bladder cancer" },
+  BRCA: { ja: "乳がん",                   en: "Breast cancer" },
+  CESC: { ja: "子宮頸がん",               en: "Cervical cancer" },
+  CHOL: { ja: "胆管がん",                 en: "Cholangiocarcinoma" },
+  COAD: { ja: "大腸がん(結腸)",           en: "Colon cancer" },
+  DLBC: { ja: "びまん性大細胞型B細胞リンパ腫", en: "Diffuse large B-cell lymphoma" },
+  ESCA: { ja: "食道がん",                 en: "Esophageal cancer" },
+  GBM:  { ja: "膠芽腫",                   en: "Glioblastoma" },
+  HNSC: { ja: "頭頸部がん",               en: "Head and neck cancer" },
+  KICH: { ja: "腎嫌色素細胞がん",         en: "Kidney chromophobe" },
+  KIRC: { ja: "腎細胞がん(淡明細胞型)",   en: "Kidney clear cell carcinoma" },
+  KIRP: { ja: "腎細胞がん(乳頭状)",       en: "Kidney papillary cell carcinoma" },
+  LAML: { ja: "急性骨髄性白血病",         en: "Acute myeloid leukemia" },
+  LGG:  { ja: "低悪性度グリオーマ",       en: "Lower grade glioma" },
+  LIHC: { ja: "肝細胞がん",               en: "Liver hepatocellular carcinoma" },
+  LUAD: { ja: "肺腺がん",                 en: "Lung adenocarcinoma" },
+  LUSC: { ja: "肺扁平上皮がん",           en: "Lung squamous cell carcinoma" },
+  MESO: { ja: "中皮腫",                   en: "Mesothelioma" },
+  OV:   { ja: "卵巣がん",                 en: "Ovarian cancer" },
+  PAAD: { ja: "膵臓がん",                 en: "Pancreatic cancer" },
+  PCPG: { ja: "褐色細胞腫・傍神経節腫",   en: "Pheochromocytoma and paraganglioma" },
+  PRAD: { ja: "前立腺がん",               en: "Prostate cancer" },
+  READ: { ja: "大腸がん(直腸)",           en: "Rectal cancer" },
+  SARC: { ja: "肉腫",                     en: "Sarcoma" },
+  SKCM: { ja: "皮膚メラノーマ",           en: "Skin melanoma" },
+  STAD: { ja: "胃がん",                   en: "Stomach cancer" },
+  TGCT: { ja: "精巣腫瘍",                 en: "Testicular germ cell tumor" },
+  THCA: { ja: "甲状腺がん",               en: "Thyroid cancer" },
+  THYM: { ja: "胸腺腫",                   en: "Thymoma" },
+  UCEC: { ja: "子宮体がん",               en: "Uterine corpus endometrial carcinoma" },
+  UCS:  { ja: "子宮がん肉腫",             en: "Uterine carcinosarcoma" },
+  UVM:  { ja: "ぶどう膜メラノーマ",       en: "Uveal melanoma" },
+};
+
+function cancerLabel(code, lang) {
+  const entry = CANCER_LABELS[code];
+  return entry ? `${entry[lang]} (${code})` : code;
+}
+
+// --- UI文言 ------------------------------------------------------------
+const STRINGS = {
+  ja: {
+    htmlLang: "ja",
+    pageTitle: "TCGA Expression Explorer — 新旧パイプライン比較",
+    subtitle: "同一検体・同一遺伝子を、3世代の定量パイプラインで並べて見る",
+    controlsLabel: "検索条件",
+    cancerLabel: "がん種",
+    cancerPlaceholder: "がん種を選択…",
+    cancerLoading: "読み込み中…",
+    geneLabel: "遺伝子",
+    genePlaceholder: "遺伝子名を入力 (例: TP53)",
+    subtypeLabel: "腫瘍の分類",
+    subtypeNone: "なし(腫瘍 / 非がん部)",
+    extraTumor: "転移巣・再発巣を含む",
+    extraTumorWithCount: (n) => `転移巣・再発巣を含む (${n}検体)`,
+    extraTumorNone: "このがん種には転移巣・再発巣の検体がありません",
+    extraTumorHint: (detail) => `既定では原発巣のみを表示します。内訳: ${detail}`,
+    logScale: "log2(x+1)表示",
+    emptyState: "がん種と遺伝子を選ぶと、腫瘍部と非がん部の発現分布が3世代分並んで表示されます。",
+    genOld: "旧世代",
+    genMid: "中期",
+    genNew: "新世代",
+    footerSource: "データソース: GDC / TCGA public RNA-seq matrices",
+
+    tumor: "腫瘍",
+    normalTissue: "非がん部",
+    normalTissueAlt: "非がん部(正常組織)",
+
+    statusReady: (n) => `${n} がん種が利用可能です`,
+    statusManifestError: (msg) => `manifest.json の読み込みに失敗しました (${msg})`,
+    statusGeneListLoading: "遺伝子リストを読み込み中…",
+    statusGeneListError: (msg) => `遺伝子リストの読み込みに失敗しました (${msg})`,
+    statusGeneList: (type, n) => `${type}: ${n.toLocaleString()} 遺伝子が利用可能です`,
+    statusGeneLoading: (g) => `${g} を読み込み中…`,
+    statusGeneError: (msg) => `遺伝子データの読み込みに失敗しました (${msg})`,
+    statusGeneNotFound: (g) => `"${g}" は見つかりませんでした。候補一覧から選んでください。`,
+    statusShowing: (type, sym, ens) => `${type} / ${sym} (${ens}) を表示中`,
+
+    plotNoData: "このがん種では未取得のデータです",
+    plotNoGene: "この遺伝子は対応するIDが見つかりませんでした",
+
+    footNormal: (n) => `非がん部 n=${n}`,
+    footTumor: (n) => `腫瘍 n=${n}`,
+    footExtraIncluded: (n) => ` [転移巣・再発巣 ${n}件を含む]`,
+    footExtraExcluded: (n) => ` [転移巣・再発巣 ${n}件を除外]`,
+    smallNWarning: (groups) =>
+      ` ⚠ 検体数が少ない群があります(${groups})。箱ひげ図の四分位数は不安定です。`,
+
+    download: "保存",
+    downloadPng: "PNG",
+    downloadSvg: "SVG",
+    downloadCsv: "CSV",
+    downloadPngTitle: "画像として保存(発表資料向け・高解像度)",
+    downloadSvgTitle: "ベクター形式で保存(論文図版向け)",
+    downloadCsvTitle: "描画中の数値をCSVで保存",
+    csvHeaderGroup: "群",
+    csvHeaderValue: "値",
+  },
+
+  en: {
+    htmlLang: "en",
+    pageTitle: "TCGA Expression Explorer — pipeline generation comparison",
+    subtitle: "The same samples and gene, side by side across three quantification pipelines",
+    controlsLabel: "Query",
+    cancerLabel: "Cancer type",
+    cancerPlaceholder: "Select a cancer type…",
+    cancerLoading: "Loading…",
+    geneLabel: "Gene",
+    genePlaceholder: "Enter a gene symbol (e.g. TP53)",
+    subtypeLabel: "Tumor grouping",
+    subtypeNone: "None (Tumor / Normal tissue)",
+    extraTumor: "Include metastatic / recurrent",
+    extraTumorWithCount: (n) => `Include metastatic / recurrent (${n} samples)`,
+    extraTumorNone: "No metastatic or recurrent samples for this cancer type",
+    extraTumorHint: (detail) => `Primary tumors only by default. Breakdown: ${detail}`,
+    logScale: "log2(x+1) scale",
+    emptyState: "Choose a cancer type and a gene to see tumor and normal-tissue expression across three pipeline generations.",
+    genOld: "Old",
+    genMid: "Mid",
+    genNew: "New",
+    footerSource: "Data source: GDC / TCGA public RNA-seq matrices",
+
+    tumor: "Tumor",
+    normalTissue: "Normal tissue",
+    normalTissueAlt: "Normal tissue (non-cancerous)",
+
+    statusReady: (n) => `${n} cancer types available`,
+    statusManifestError: (msg) => `Failed to load manifest.json (${msg})`,
+    statusGeneListLoading: "Loading gene list…",
+    statusGeneListError: (msg) => `Failed to load the gene list (${msg})`,
+    statusGeneList: (type, n) => `${type}: ${n.toLocaleString()} genes available`,
+    statusGeneLoading: (g) => `Loading ${g}…`,
+    statusGeneError: (msg) => `Failed to load gene data (${msg})`,
+    statusGeneNotFound: (g) => `"${g}" was not found. Please pick one from the suggestions.`,
+    statusShowing: (type, sym, ens) => `Showing ${type} / ${sym} (${ens})`,
+
+    plotNoData: "Not collected for this cancer type",
+    plotNoGene: "No matching gene ID in this dataset",
+
+    footNormal: (n) => `Normal tissue n=${n}`,
+    footTumor: (n) => `Tumor n=${n}`,
+    footExtraIncluded: (n) => ` [including ${n} metastatic/recurrent]`,
+    footExtraExcluded: (n) => ` [excluding ${n} metastatic/recurrent]`,
+    smallNWarning: (groups) =>
+      ` ⚠ Small group size (${groups}). Box quartiles are unstable.`,
+
+    download: "Save",
+    downloadPng: "PNG",
+    downloadSvg: "SVG",
+    downloadCsv: "CSV",
+    downloadPngTitle: "Save as an image (high resolution, for slides)",
+    downloadSvgTitle: "Save as vector graphics (for publication figures)",
+    downloadCsvTitle: "Save the plotted values as CSV",
+    csvHeaderGroup: "group",
+    csvHeaderValue: "value",
+  },
+};
