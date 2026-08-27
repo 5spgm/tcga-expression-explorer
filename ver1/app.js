@@ -5,7 +5,7 @@
 // 末尾にスラッシュを付けないこと(下の fetch 側が `${DATA_BASE_URL}/...` の形で組み立てる)。
 // (自前サーバー側で Access-Control-Allow-Origin ヘッダの設定と、HTTPS化が必要。
 //  詳細はREADMEの「3. データを自前サーバーに置く場合」を参照)
-const DATA_BASE_URL = "https://importantly-ministers-inquiry-through.trycloudflare.com/data";
+const DATA_BASE_URL = "https://pub-19864563e9014e228cefc601d77adfbc.r2.dev";
 
 // 非がん部の箱に使う名前。単に "Normal" にすると、PAM50の "Normal"
 // (Normal-like)のようにsubtype側に同名のラベルがある場合、Plotlyが同じ
@@ -57,8 +57,6 @@ const state = {
   includeExtraTumor: false,  // 転移巣・再発巣(sample type code 02/06など)を含めるか。既定は除外。
   lang: "ja",                // "ja" | "en"
   boxOrder: null,            // 3世代で共通の箱の並び順(renderAllPanelsで決める)
-  statusRender: null,        // ステータス行を現在の言語で作り直すための関数
-  statusIsError: false,
 };
 
 // 現在の言語の文字列辞書。t.xxx で参照する。
@@ -104,16 +102,22 @@ function refreshDynamicStrings() {
     const selected = cancerSelect.value;
     fillCancerSelect();
     cancerSelect.value = selected;
+    if (!selected) setStatus(t.statusReady(Object.keys(state.manifest.cancer_types || {}).length));
   }
-  // 保持しておいた描画関数を新しい辞書で呼び直す(がん種選択後でも追従する)
-  renderStatus();
   const subtypeSelect = el("subtype-scheme-select");
   if (subtypeSelect && subtypeSelect.options.length) {
     const first = subtypeSelect.options[0];
     if (first && first.value === "__none__") first.textContent = t.subtypeNone;
   }
   if (state.cancerType) updateExtraTumorControl(state.cancerType);
-  if (state.currentGeneJson) renderAllPanels();
+  if (state.currentGeneJson) {
+    renderAllPanels();
+    setStatus(t.statusShowing(cancerLabel(state.cancerType, state.lang),
+                              state.currentGeneJson.gene_symbol,
+                              state.currentGeneJson.gene_id));
+  } else {
+    hidePanels();
+  }
 }
 
 function fillCancerSelect() {
@@ -132,21 +136,9 @@ const statusLine = el("status-line");
 const emptyState = el("empty-state");
 const panelsSection = el("panels");
 
-// ステータス行は言語切替のたびに描き直す必要があるため、確定した文字列では
-// なく「現在の辞書 t から文字列を作る関数」を保持しておく。
-// こうしないと、がん種を選んだ後に言語を切り替えたとき
-// 「60,660 遺伝子が利用可能です」が日本語のまま残る。
-function setStatus(render, isError = false) {
-  state.statusRender = typeof render === "function" ? render : () => render;
-  state.statusIsError = isError;
-  renderStatus();
-}
-
-function renderStatus() {
-  if (!state.statusRender) return;
-  const msg = state.statusRender();
+function setStatus(msg, isError = false) {
   statusLine.textContent = msg;
-  statusLine.classList.toggle("error", state.statusIsError);
+  statusLine.classList.toggle("error", isError);
 }
 
 async function fetchJson(path) {
@@ -168,7 +160,7 @@ async function init() {
   try {
     state.manifest = await fetchJson(`${DATA_BASE_URL}/manifest.json`);
   } catch (err) {
-    setStatus(() => t.statusManifestError(err.message), true);
+    setStatus(t.statusManifestError(err.message), true);
     return;
   }
 
@@ -211,7 +203,7 @@ async function init() {
     });
   });
 
-  setStatus(() => t.statusReady(types.length));
+  setStatus(t.statusReady(types.length));
 }
 
 async function onCancerTypeChange(e) {
@@ -219,24 +211,21 @@ async function onCancerTypeChange(e) {
   state.cancerType = cancerType || null;
   const geneInput = el("gene-input");
 
-  // 入力済みの遺伝子名は覚えておき、がん種を変えた後もそのまま使う。
-  // 「大腸がんでTP53 → 乳がんでTP53」のように、同じ遺伝子を複数のがん種で
-  // 見比べるとき、毎回打ち直さずに済ませるため。
-  const carriedGene = geneInput.value.trim();
-
   if (!cancerType) {
     geneInput.disabled = true;
-    return;   // 入力内容は消さずに残す
+    geneInput.value = "";
+    return;
   }
 
   geneInput.disabled = true;
-  setStatus(() => t.statusGeneListLoading);
+  geneInput.value = "";
+  setStatus(t.statusGeneListLoading);
   hidePanels();
 
   try {
     state.geneIndex = await fetchJson(`${DATA_BASE_URL}/${cancerType}/_index.json`);
   } catch (err) {
-    setStatus(() => t.statusGeneListError(err.message), true);
+    setStatus(t.statusGeneListError(err.message), true);
     return;
   }
 
@@ -255,7 +244,7 @@ async function onCancerTypeChange(e) {
   datalist.appendChild(frag);
 
   geneInput.disabled = false;
-  setStatus(() => t.statusGeneList(cancerLabel(cancerType, state.lang), state.geneIndex.length));
+  setStatus(t.statusGeneList(cancerLabel(cancerType, state.lang), state.geneIndex.length));
 
   // このがん種で使えるTumor分類方式をプルダウンに反映
   const subtypeSelect = el("subtype-scheme-select");
@@ -270,20 +259,6 @@ async function onCancerTypeChange(e) {
   }
 
   updateExtraTumorControl(cancerType);
-
-  // 引き継いだ遺伝子名がこのがん種にもあれば、そのまま描き直す
-  if (carriedGene) {
-    geneInput.value = carriedGene;
-    if (state.symbolToEnsembl.has(carriedGene.toUpperCase())) {
-      await onGeneCommit();
-    } else {
-      // 名前は残したまま、このがん種には無いことだけ伝える
-      state.currentGeneJson = null;
-      hidePanels();
-      setStatus(() => t.statusGeneNotInCancer(carriedGene,
-                                              cancerLabel(cancerType, state.lang)), true);
-    }
-  }
 }
 
 // このがん種に転移巣・再発巣があるかをmanifestから見て、チェックボックスの
@@ -319,22 +294,22 @@ async function onGeneCommit() {
 
   const ensembl = state.symbolToEnsembl.get(raw.toUpperCase());
   if (!ensembl) {
-    setStatus(() => t.statusGeneNotFound(raw), true);
+    setStatus(t.statusGeneNotFound(raw), true);
     hidePanels();
     return;
   }
 
-  setStatus(() => t.statusGeneLoading(raw));
+  setStatus(t.statusGeneLoading(raw));
   try {
     state.currentGeneJson = await fetchJson(`${DATA_BASE_URL}/${state.cancerType}/${ensembl}.json`);
   } catch (err) {
-    setStatus(() => t.statusGeneError(err.message), true);
+    setStatus(t.statusGeneError(err.message), true);
     return;
   }
 
   renderAllPanels();
-  setStatus(() => t.statusShowing(cancerLabel(state.cancerType, state.lang),
-                                  state.currentGeneJson.gene_symbol, ensembl));
+  setStatus(t.statusShowing(cancerLabel(state.cancerType, state.lang),
+                            state.currentGeneJson.gene_symbol, ensembl));
 }
 
 function hidePanels() {

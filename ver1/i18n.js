@@ -86,8 +86,6 @@ const STRINGS = {
     statusGeneError: (msg) => `遺伝子データの読み込みに失敗しました (${msg})`,
     statusGeneNotFound: (g) => `"${g}" は見つかりませんでした。候補一覧から選んでください。`,
     statusShowing: (type, sym, ens) => `${type} / ${sym} (${ens}) を表示中`,
-    statusGeneNotInCancer: (g, type) =>
-      `"${g}" は ${type} のデータには含まれていません。別の遺伝子を入力してください。`,
 
     plotNoData: "このがん種では未取得のデータです",
     plotNoGene: "この遺伝子は対応するIDが見つかりませんでした",
@@ -146,8 +144,6 @@ const STRINGS = {
     statusGeneError: (msg) => `Failed to load gene data (${msg})`,
     statusGeneNotFound: (g) => `"${g}" was not found. Please pick one from the suggestions.`,
     statusShowing: (type, sym, ens) => `Showing ${type} / ${sym} (${ens})`,
-    statusGeneNotInCancer: (g, type) =>
-      `"${g}" is not present in the ${type} dataset. Please try another gene.`,
 
     plotNoData: "Not collected for this cancer type",
     plotNoGene: "No matching gene ID in this dataset",
