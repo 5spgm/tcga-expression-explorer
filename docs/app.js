@@ -1,20 +1,17 @@
 // ============================================================
 // TCGA Expression Explorer
 // ============================================================
-// データの置き場所。自前サーバーにデータを置く場合はここを絶対URLに変更する。
-// 末尾にスラッシュを付けないこと(下の fetch 側が `${DATA_BASE_URL}/...` の形で組み立てる)。
-// (自前サーバー側で Access-Control-Allow-Origin ヘッダの設定と、HTTPS化が必要。
-//  詳細はREADMEの「3. データを自前サーバーに置く場合」を参照)
-const DATA_BASE_URL = "https://pub-19864563e9014e228cefc601d77adfbc.r2.dev";
+// データの置き場所(DATA_BASE_URL)は config.js で設定する。
+// config.js は index.html でこのファイルより先に読み込まれる。
+
+// グラフ内のフォント。英数字はArial、日本語は和文フォントへ自動で落ちる。
+// PNG/SVGで書き出した図にもこの指定がそのまま乗る。
+const PLOT_FONT = 'Arial, Helvetica, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif';
 
 // 非がん部の箱に使う名前。単に "Normal" にすると、PAM50の "Normal"
 // (Normal-like)のようにsubtype側に同名のラベルがある場合、Plotlyが同じ
 // カテゴリとして束ねてしまい、2つの箱が重なって描画される。
 // 衝突しない名前を使い、必ず右端に置く。
-// グラフ内のフォント。英数字はArial、日本語は和文フォントへ自動で落ちる。
-// PNG/SVGで書き出した図にもこの指定がそのまま乗る。
-const PLOT_FONT = 'Arial, Helvetica, "Hiragino Sans", "Yu Gothic", "Noto Sans JP", sans-serif';
-
 function normalTraceName(boxes) {
   // subtype側に同名ラベル(PAM50の "Normal" 等)があると Plotly が同じ
   // カテゴリとして束ね、箱が重なってしまう。衝突する場合だけ名前をずらす。
@@ -157,6 +154,16 @@ async function fetchJson(path) {
 
 // ---------- 初期化 ----------
 async function init() {
+  // config.js の読み込み漏れは「画面が真っ白」という分かりにくい症状になるため、
+  // ここで明示的に検出して伝える。
+  if (typeof DATA_BASE_URL === "undefined" || !DATA_BASE_URL) {
+    statusLine.textContent =
+      "config.js が読み込まれていないか、DATA_BASE_URL が空です。" +
+      "index.html と同じ場所に config.js があるか確認してください。";
+    statusLine.classList.add("error");
+    return;
+  }
+
   state.lang = detectLang();
   t = STRINGS[state.lang];
   applyStaticStrings();
