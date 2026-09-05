@@ -302,3 +302,70 @@ select:disabled, input:disabled {
 .panel-footnote.has-warning {
   color: #a35a12;
 }
+
+/* ---------- フッター(引用・出典・更新履歴) ---------- */
+.footer-block { margin-top: 1.1rem; }
+.footer-block h2 {
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+  margin: 0 0 0.35rem;
+}
+.footer-block p { margin: 0 0 0.4rem; line-height: 1.6; }
+.footer-block ul {
+  margin: 0.2rem 0 0.4rem;
+  padding-left: 1.1rem;
+  line-height: 1.65;
+}
+.footer-block li { margin-bottom: 0.15rem; }
+.footer-block a { color: var(--accent); }
+.fine-print { font-size: 0.72rem; color: var(--muted); }
+.footer-meta { font-size: 0.72rem; color: var(--muted); }
+.footer-meta .sep { margin: 0 0.4rem; }
+
+.changelog { margin-bottom: 0.8rem; }
+.changelog summary {
+  cursor: pointer;
+  font-family: var(--font-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.changelog-entry { margin: 0.6rem 0 0.2rem; }
+.changelog-date {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+.changelog ul { margin: 0.15rem 0 0; padding-left: 1.1rem; line-height: 1.6; }
+.glossary { line-height: 1.7; }
+.glossary code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: var(--normal-soft);
+  padding: 0.05rem 0.3rem;
+  border-radius: 3px;
+}
+
+/* ---------- クリアボタン ---------- */
+.clear-group { display: flex; align-items: flex-end; }
+.clear-group button {
+  font-family: var(--font-ui);
+  font-size: 0.82rem;
+  border: 1px solid var(--rule-strong);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 3px;
+  padding: 0.5rem 0.9rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.clear-group button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}

@@ -89,6 +89,11 @@ function applyStaticStrings() {
     if (typeof value === "string") node.textContent = value;
   });
   el("gene-input").placeholder = t.genePlaceholder;
+  renderChangelog();
+  renderReferences();
+  const clearBtn = el("clear-button");
+  if (clearBtn) clearBtn.title = t.clearTitle;
+  renderValueTypeGlossary();
   document.querySelectorAll(".lang-switch button").forEach((b) => {
     b.classList.toggle("active", b.dataset.lang === state.lang);
   });
@@ -185,6 +190,17 @@ async function init() {
 
   cancerSelect.addEventListener("change", onCancerTypeChange);
   el("gene-input").addEventListener("change", onGeneCommit);
+  // 入力中に文字を消したり別の遺伝子名に書き換えたりした時点で、
+  // 表示中の図は「今の入力内容」と一致しなくなる。古い図を残さず畳む。
+  el("gene-input").addEventListener("input", () => {
+    const raw = el("gene-input").value.trim();
+    const shown = state.currentGeneJson && state.currentGeneJson.gene_symbol;
+    if (!shown) return;
+    if (raw.toUpperCase() !== String(shown).toUpperCase()) {
+      hidePanels();
+      setStatus(() => (raw ? t.statusGeneLoading(raw) : t.statusGeneCleared));
+    }
+  });
   el("gene-input").addEventListener("keydown", (e) => {
     if (e.key === "Enter") onGeneCommit();
   });
@@ -211,6 +227,11 @@ async function init() {
       if (state.currentGeneJson) renderAllPanels();
     });
   }
+  const clearButton = el("clear-button");
+  if (clearButton) {
+    clearButton.title = t.clearTitle;
+    clearButton.addEventListener("click", clearAll);
+  }
   window.addEventListener("resize", () => {
     GENERATIONS.forEach((g) => {
       const node = el(g.plotId);
@@ -219,6 +240,52 @@ async function init() {
   });
 
   setStatus(() => t.statusReady(types.length));
+}
+
+// 指定を全部消して最初の状態に戻す。
+// 個別に消していくと「がん種は残っているのに分類だけ初期化された」といった
+// 中途半端な状態になりやすいので、1つの操作でまとめて戻せるようにする。
+function clearAll() {
+  const cancerSelect = el("cancer-select");
+  const geneInput = el("gene-input");
+  const subtypeSelect = el("subtype-scheme-select");
+  const extraToggle = el("extra-tumor-toggle");
+
+  cancerSelect.value = "";
+  state.cancerType = null;
+
+  geneInput.value = "";
+  geneInput.disabled = true;
+  state.geneIndex = [];
+  state.symbolToEnsembl = new Map();
+  el("gene-list").innerHTML = "";
+
+  state.subtypeScheme = "__none__";
+  if (subtypeSelect) {
+    subtypeSelect.innerHTML = "";
+    subtypeSelect.disabled = true;
+  }
+
+  state.includeExtraTumor = false;
+  if (extraToggle) {
+    extraToggle.checked = false;
+    extraToggle.disabled = true;
+    const label = el("extra-tumor-label");
+    if (label) {
+      label.classList.add("is-disabled");
+      const textNode = label.querySelector("[data-i18n]");
+      if (textNode) textNode.textContent = t.extraTumor;
+      label.title = "";
+    }
+  }
+
+  state.activeValueType = { old: null, mid: null, new: null };
+  state.boxOrder = null;
+  hidePanels();   // currentGeneJson もここで破棄される
+
+  const n = Object.keys((state.manifest || {}).cancer_types || {}).length;
+  setStatus(() => t.statusReady(n));
+  geneInput.focus();
 }
 
 async function onCancerTypeChange(e) {
@@ -347,6 +414,12 @@ async function onGeneCommit() {
 function hidePanels() {
   panelsSection.style.display = "none";
   emptyState.style.display = "block";
+  // 表示中の遺伝子データも破棄する。これを残しておくと、遺伝子欄を空にした後や
+  // がん種を変えた後に「Tumor分類」を切り替えたとき、
+  //   if (state.currentGeneJson) renderAllPanels();
+  // が成立してしまい、**前に表示していた遺伝子の図が復活する**。
+  // 空欄なのに箱ひげ図が出る、という報告の原因はこれ。
+  state.currentGeneJson = null;
 }
 
 function renderAllPanels() {
@@ -387,6 +460,7 @@ function renderAllPanels() {
       for (const vt of valueTypes) {
         const btn = document.createElement("button");
         btn.textContent = vt;
+        btn.title = valueTypeInfo(vt, state.lang);
         btn.className = state.activeValueType[gen.key] === vt ? "active" : "";
         btn.addEventListener("click", () => {
           state.activeValueType[gen.key] = vt;
@@ -399,6 +473,7 @@ function renderAllPanels() {
       const chip = document.createElement("span");
       chip.className = "value-type-static";
       chip.textContent = valueTypes[0];
+      chip.title = valueTypeInfo(valueTypes[0], state.lang);
       row.appendChild(chip);
     }
 
@@ -504,6 +579,67 @@ function saveCsv(plotId, filename) {
   a.click();
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
+}
+
+// ---------- フッター ----------
+// 更新履歴。changelog.js の CHANGELOG を現在の言語で描画する。
+// 既定は閉じた状態(<details>)で、必要な人だけが開く。
+function renderChangelog() {
+  const body = el("changelog-body");
+  if (!body || typeof CHANGELOG === "undefined") return;
+  body.innerHTML = "";
+  for (const entry of CHANGELOG) {
+    const items = entry[state.lang] || entry.en || [];
+    if (!items.length) continue;
+    const block = document.createElement("div");
+    block.className = "changelog-entry";
+
+    const head = document.createElement("div");
+    head.className = "changelog-date";
+    head.textContent = entry.version ? `${entry.date} (${entry.version})` : entry.date;
+    block.appendChild(head);
+
+    const ul = document.createElement("ul");
+    for (const line of items) {
+      const li = document.createElement("li");
+      li.textContent = line;
+      ul.appendChild(li);
+    }
+    block.appendChild(ul);
+    body.appendChild(block);
+  }
+}
+
+// 値の種類の説明。normalized count が何を指すのか分からないという指摘への対応。
+// パネル上のバッジにはツールチップで、フッターには一覧として出す。
+function renderValueTypeGlossary() {
+  const list = el("value-type-glossary");
+  if (!list || typeof VALUE_TYPE_INFO === "undefined") return;
+  list.innerHTML = "";
+  for (const vt of Object.keys(VALUE_TYPE_INFO)) {
+    const li = document.createElement("li");
+    const name = document.createElement("code");
+    name.textContent = vt;
+    li.appendChild(name);
+    li.appendChild(document.createTextNode(" — " + valueTypeInfo(vt, state.lang)));
+    list.appendChild(li);
+  }
+}
+
+// 分類の出典。書誌情報なので言語によらず英語表記のまま出す。
+function renderReferences() {
+  const list = el("reference-list");
+  if (!list || typeof REFERENCES === "undefined") return;
+  list.innerHTML = "";
+  for (const ref of REFERENCES) {
+    const li = document.createElement("li");
+    const a = document.createElement("a");
+    a.href = ref.url;
+    a.rel = "noopener";
+    a.textContent = ref.text;
+    li.appendChild(a);
+    list.appendChild(li);
+  }
 }
 
 // 3世代に共通の「箱の並び順」を決める。

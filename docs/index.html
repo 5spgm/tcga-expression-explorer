@@ -52,6 +52,10 @@
       </label>
     </div>
 
+    <div class="control-group clear-group">
+      <button type="button" id="clear-button" data-i18n="clear"></button>
+    </div>
+
     <div class="control-group status-group">
       <span id="status-line" class="status-line"></span>
     </div>
@@ -96,10 +100,38 @@
 </main>
 
 <footer class="page-footer">
-  <span data-i18n="footerSource"></span>
+  <!-- 更新履歴。既定は閉じた状態 -->
+  <details class="changelog">
+    <summary data-i18n="changelogTitle"></summary>
+    <div id="changelog-body"></div>
+  </details>
+
+  <div class="footer-block">
+    <h2 data-i18n="citeTitle"></h2>
+    <p id="cite-body" data-i18n="citeBody"></p>
+  </div>
+
+  <div class="footer-block">
+    <h2 data-i18n="valueTypeTitle"></h2>
+    <ul id="value-type-glossary" class="glossary"></ul>
+  </div>
+
+  <div class="footer-block">
+    <h2 data-i18n="dataSourceTitle"></h2>
+    <p data-i18n="dataSourceBody"></p>
+    <ul id="reference-list"></ul>
+    <p class="fine-print" data-i18n="dataSourceNote"></p>
+  </div>
+
+  <div class="footer-block footer-meta">
+    <span data-i18n="licenseNote"></span>
+    <span class="sep">·</span>
+    <a href="https://github.com/5spgm/tcga-expression-explorer" rel="noopener">GitHub</a>
+  </div>
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="changelog.js"></script>
 <script src="config.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>
