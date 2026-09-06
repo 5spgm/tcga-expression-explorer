@@ -12,10 +12,14 @@ const CHANGELOG = [
     date: "2026-09-05",
     ja: [
       "胃がん (STAD) を追加(分子サブタイプ / MSI / CIMP / 免疫サブタイプ / iCluster)",
+      "データの出典をがん種ごとの表にまとめた別ページを追加しました",
+      "旧TCGA DCCからの取得日と、同梱されていた記録の内容を明記しました",
       "指定をまとめて消す「クリア」ボタンを追加しました",
     ],
     en: [
       "Added gastric cancer (STAD) with molecular subtype, MSI, CIMP, immune subtype and iCluster",
+      "Added a separate page listing data sources per cancer type",
+      "Documented the download dates and the records bundled with the legacy TCGA DCC downloads",
       "Added a Clear button that resets all selections at once",
     ],
   },

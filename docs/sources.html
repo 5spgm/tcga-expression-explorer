@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>データの出典 — TCGA Expression Explorer</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <h1 data-i18n="sourcesPageTitle"></h1>
+    <p class="subtitle" data-i18n="sourcesPageLead"></p>
+    <div class="lang-switch" role="group" aria-label="Language">
+      <button type="button" data-lang="ja">日本語</button>
+      <button type="button" data-lang="en">English</button>
+    </div>
+    <p class="back-link"><a href="./" data-i18n="backToTool"></a></p>
+  </div>
+</header>
+
+<main class="doc">
+  <section>
+    <h2 data-i18n="expressionSourceTitle"></h2>
+    <p data-i18n="expressionSourceLead"></p>
+    <div id="cancer-tables"></div>
+  </section>
+
+  <section>
+    <h2 data-i18n="sourceNotesTitle"></h2>
+    <dl id="source-notes" class="source-notes"></dl>
+  </section>
+
+  <section>
+    <h2 data-i18n="subtypeSourceTitle"></h2>
+    <p data-i18n="subtypeSourceLead"></p>
+    <ul id="subtype-sources" class="glossary"></ul>
+  </section>
+
+  <section>
+    <h2 data-i18n="valueTypeTitle"></h2>
+    <ul id="value-type-glossary" class="glossary"></ul>
+  </section>
+
+  <section>
+    <h2 data-i18n="termsTitle"></h2>
+    <p class="fine-print" data-i18n="dataSourceNote"></p>
+    <p class="fine-print" data-i18n="licenseNote"></p>
+  </section>
+</main>
+
+<footer class="page-footer">
+  <div class="footer-block footer-meta">
+    <a href="./" data-i18n="backToTool"></a>
+    <span class="sep">·</span>
+    <a href="https://github.com/5spgm/tcga-expression-explorer" rel="noopener">GitHub</a>
+  </div>
+</footer>
+
+<script src="i18n.js"></script>
+<script src="sources.js"></script>
+<script src="sources-page.js"></script>
+</body>
+</html>

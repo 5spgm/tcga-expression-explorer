@@ -90,7 +90,7 @@ function applyStaticStrings() {
   });
   el("gene-input").placeholder = t.genePlaceholder;
   renderChangelog();
-  renderReferences();
+  renderCitation();
   const clearBtn = el("clear-button");
   if (clearBtn) clearBtn.title = t.clearTitle;
   renderValueTypeGlossary();
@@ -626,20 +626,25 @@ function renderValueTypeGlossary() {
   }
 }
 
-// 分類の出典。書誌情報なので言語によらず英語表記のまま出す。
-function renderReferences() {
-  const list = el("reference-list");
-  if (!list || typeof REFERENCES === "undefined") return;
-  list.innerHTML = "";
-  for (const ref of REFERENCES) {
-    const li = document.createElement("li");
-    const a = document.createElement("a");
-    a.href = ref.url;
-    a.rel = "noopener";
-    a.textContent = ref.text;
-    li.appendChild(a);
-    list.appendChild(li);
+// 論文情報。まだ出ていない場合は準備中である旨を出す。
+// 出典の詳細は sources.html に分けてある。
+function renderCitation() {
+  const line = el("citation-line");
+  if (!line) return;
+  line.innerHTML = "";
+  const hasDoi = typeof CITATION !== "undefined" && CITATION.doi;
+  if (!hasDoi) {
+    line.textContent = t.paperPending;
+    return;
   }
+  if (CITATION.text) {
+    line.appendChild(document.createTextNode(CITATION.text + " "));
+  }
+  const a = document.createElement("a");
+  a.href = "https://doi.org/" + CITATION.doi;
+  a.rel = "noopener";
+  a.textContent = "doi:" + CITATION.doi;
+  line.appendChild(a);
 }
 
 // 3世代に共通の「箱の並び順」を決める。

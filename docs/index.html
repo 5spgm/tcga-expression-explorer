@@ -108,30 +108,22 @@
 
   <div class="footer-block">
     <h2 data-i18n="citeTitle"></h2>
-    <p id="cite-body" data-i18n="citeBody"></p>
-  </div>
-
-  <div class="footer-block">
-    <h2 data-i18n="valueTypeTitle"></h2>
-    <ul id="value-type-glossary" class="glossary"></ul>
-  </div>
-
-  <div class="footer-block">
-    <h2 data-i18n="dataSourceTitle"></h2>
-    <p data-i18n="dataSourceBody"></p>
-    <ul id="reference-list"></ul>
-    <p class="fine-print" data-i18n="dataSourceNote"></p>
+    <!-- 論文が出たらここをDOIリンクに差し替える(citation.js を編集) -->
+    <p id="citation-line"></p>
   </div>
 
   <div class="footer-block footer-meta">
-    <span data-i18n="licenseNote"></span>
+    <a href="sources.html" data-i18n="sourcesLink"></a>
     <span class="sep">·</span>
     <a href="https://github.com/5spgm/tcga-expression-explorer" rel="noopener">GitHub</a>
+    <span class="sep">·</span>
+    <span data-i18n="licenseNote"></span>
   </div>
 </footer>
 
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
 <script src="changelog.js"></script>
+<script src="citation.js"></script>
 <script src="config.js"></script>
 <script src="i18n.js"></script>
 <script src="app.js"></script>

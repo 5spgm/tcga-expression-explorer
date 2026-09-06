@@ -77,6 +77,29 @@ const STRINGS = {
     clear: "クリア",
     clearTitle: "がん種・遺伝子・分類の指定をすべて消して最初の状態に戻します",
     changelogTitle: "更新履歴",
+
+    // --- 出典ページ ---
+    sourcesPageTitle: "データの出典",
+    sourcesPageLead: "がん種ごとに、どのパイプラインの値を、いつ、どこから取得したか",
+    backToTool: "← ツールに戻る",
+    sourcesLink: "データの出典と引用",
+    expressionSourceTitle: "発現データ",
+    expressionSourceLead: "旧世代の一部は、現在は閉鎖されたポータルから取得したものです。" +
+                          "同じ値は他の公開リポジトリからも取得できますが、" +
+                          "当時のコホート構成をそのまま再現することはできません。",
+    sourceNotesTitle: "取得元について",
+    subtypeSourceTitle: "分類(サブタイプ)の出典",
+    subtypeSourceLead: "分類の割り当ては以下の論文の補足資料に基づきます。" +
+                       "利用の際は原著を引用してください。",
+    termsTitle: "利用条件",
+    colGeneration: "世代",
+    colPipeline: "パイプライン",
+    colValue: "値",
+    colSource: "取得元",
+    colAcquired: "取得時期",
+    retired: "閉鎖済み",
+    usedIn: "使用がん種",
+    paperPending: "本ツールに関する論文は準備中です。",
     citeTitle: "引用",
     citeBody: "本ツールを研究に利用された場合は、下記リポジトリをご参照ください。" +
               "分類(サブタイプ)を利用した場合は、下に挙げた原著論文も併せて引用してください。",
@@ -152,6 +175,29 @@ const STRINGS = {
     clear: "Clear",
     clearTitle: "Reset the cancer type, gene and grouping to the initial state",
     changelogTitle: "Changelog",
+
+    // --- sources page ---
+    sourcesPageTitle: "Data sources",
+    sourcesPageLead: "Which pipeline each value comes from, and when and where it was obtained, per cancer type",
+    backToTool: "← Back to the tool",
+    sourcesLink: "Data sources and citation",
+    expressionSourceTitle: "Expression data",
+    expressionSourceLead: "Part of the old-generation data was obtained from a portal that has since " +
+                          "been retired. The same values remain available from other public " +
+                          "repositories, but the cohort composition of that time cannot be reproduced.",
+    sourceNotesTitle: "About the sources",
+    subtypeSourceTitle: "Sources of the subtype assignments",
+    subtypeSourceLead: "Subtype assignments are derived from the supplementary material of the " +
+                       "following papers. Please cite the original publications if you use them.",
+    termsTitle: "Terms of use",
+    colGeneration: "Generation",
+    colPipeline: "Pipeline",
+    colValue: "Value",
+    colSource: "Source",
+    colAcquired: "Obtained",
+    retired: "retired",
+    usedIn: "used in",
+    paperPending: "A paper describing this tool is in preparation.",
     citeTitle: "Citation",
     citeBody: "If you use this tool in your research, please refer to the repository below. " +
               "If you use the molecular subtype assignments, please also cite the original papers listed here.",
