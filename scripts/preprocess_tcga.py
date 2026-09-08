@@ -376,7 +376,16 @@ def load_new(path: str, value_label: str):
     return matrix, master
 
 
-def load_mid(path: str, value_label: str):
+def load_mid(path: str, value_label: str, log2p1: bool = False):
+    """中期世代(HTSeq期, GENCODE v22, 60,483遺伝子)の行列を読み込む。
+
+    log2p1=True のときは値を 2^x - 1 で線形スケールへ戻す。
+    乳がん(BRCA)の中期だけがこれに該当する。GDCはコホート単位の行列を
+    配布しないため、当時のHTSeq FPKMはUCSC XenaのGDC hubから取得した
+    ものを使っている。Xenaはこのhubの発現値を log2(x+1) に変換して
+    配布しているので、他がん種(GDCから検体ごとに取得してFPKM-UQの
+    生値で組んだ行列)と同じスケールに揃えるには逆変換が必要になる。
+    """
     print(f"[mid:{value_label}] 読み込み中: {path}")
     df = read_matrix_file(path)
     id_col = df.columns[0]
@@ -392,6 +401,28 @@ def load_mid(path: str, value_label: str):
         print(f"  [注記] 重複する遺伝子ID {n_before - len(df)} 件は最初の行のみ採用")
 
     values = df[sample_cols].apply(pd.to_numeric, errors="coerce").to_numpy(dtype=float)
+
+    # --- スケールの検査と、必要なら log2(x+1) の逆変換 ---
+    finite = values[np.isfinite(values)]
+    vmax = float(finite.max()) if finite.size else float("nan")
+    if log2p1:
+        if vmax > 64:
+            sys.exit(f"[mid:{value_label}] --mid-log2p1 が指定されましたが、最大値が "
+                     f"{vmax:.3g} で対数スケールとしては大きすぎます。"
+                     f"既に線形値のファイルに逆変換をかけようとしていないか確認してください。")
+        values = np.power(2.0, values) - 1.0
+        # log2(x+1) の逆変換は原理上非負だが、丸め誤差で -1e-16 程度が出る
+        values[np.isfinite(values) & (values < 0)] = 0.0
+        print(f"  [変換] log2(x+1) を逆変換しました (最大値 {vmax:.3g} → "
+              f"{np.nanmax(values):.3g})。以降は線形の {value_label} として扱います。")
+    elif vmax < 64:
+        # FPKM / FPKM-UQ の生値でhouse-keeping遺伝子が64未満に収まることはない。
+        # 対数変換済みのファイルを生値として読み込むと、世代間の比較が
+        # 黙って壊れる(値の桁が数百万倍ずれる)。落とさず強く警告する。
+        print(f"  [警告] 最大値が {vmax:.3g} しかありません。{value_label} の生値としては"
+              f"小さすぎるため、このファイルは log2(x+1) 変換済みの可能性があります。"
+              f"その場合は --mid-log2p1 を付けて実行してください。", file=sys.stderr)
+
     matrix = {"ensembl_ids": df["_ensembl"].to_numpy(), "sample_cols": sample_cols, "values": values}
 
     print(f"  遺伝子数: {len(df)}, サンプル数: {len(sample_cols)}")
@@ -547,6 +578,10 @@ def main():
     ap.add_argument("--new-fpkmuq", help="新データ FPKM-UQ ファイル(任意)")
     ap.add_argument("--mid-fpkmuq", help="中期データ FPKM-UQ ファイル")
     ap.add_argument("--mid-fpkm", help="中期データ FPKM ファイル(任意)")
+    ap.add_argument("--mid-log2p1", action="store_true",
+                    help="中期データが log2(x+1) 変換済みの場合に指定する。"
+                         "読み込み後に 2^x - 1 で線形スケールへ戻す。"
+                         "UCSC Xena の GDC hub から取得した行列(乳がんの中期)が該当する。")
     ap.add_argument("--old-normcount", help="旧データ normalized_count ファイル")
     ap.add_argument("--dedup-vials", choices=["first", "last", "none"], default="first",
                      help="同一患者×同一sample typeに複数vial(01A/01Bなど)がある場合の扱い。"
@@ -643,7 +678,7 @@ def main():
     for label, path in mid_specs:
         if not path:
             continue
-        mid_frames[label] = load_mid(path, label)
+        mid_frames[label] = load_mid(path, label, log2p1=args.mid_log2p1)
 
     # 新世代が無いがん種では、中期をマスター遺伝子リストとして使う。
     # 中期もEnsembl IDなので同じ役割を果たせる。ただしgene_symbol /

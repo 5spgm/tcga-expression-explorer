@@ -31,8 +31,19 @@ BRCA_CLINICAL="$REF_DIR/nationwidechildrens_org_clinical_patient_brca.txt"
 BRCA_SHEET="$REF_DIR/gdc_sample_sheet_2025-06-26.tsv"
 
 BRCA_NEW="$MAT_DIR/TCGA_BRCA_TPM.xlsx"
-BRCA_MID="$MAT_DIR/TCGA-BRCA_htseq_fpkm.xlsx"      # BRCAは FPKM (COADは FPKM-UQ)
-BRCA_OLD="$MAT_DIR/BRCA-HiseqV2-Tumor-Normal.xlsx"
+# BRCAの中期だけは UCSC Xena の GDC hub から取得した行列を使う。
+# GDCはコホート単位の行列を配布せず、当時のHTSeq FPKMは現在のGDCからは
+# 取得できないため、他がん種のように検体ごとに取得して組む経路が取れない。
+# Xenaはこのhubの値を log2(x+1) で配布しているので --mid-log2p1 で逆変換する。
+# 値の種類も FPKM であり、他がん種の中期(FPKM-UQ)とは異なる点に注意。
+# 入力は Xena から取得した原本 .gz をそのまま使う(寄託物と同一のバイト列)。
+# 以前は同じ .gz を展開して xlsx に変換したものを読ませていたが、Excel往復で
+# 最下位桁の丸め(log2スケールで最大 3.2e-14)が入るため原本に統一した。
+# read_matrix_file は .gz を read_csv 側で読み、load_mid は1列目を遺伝子ID列
+# として使う(列名は Ensembl_ID)ので、コード側の変更は不要。
+# tcga_matrix/TCGA-BRCA.htseq_fpkm.tsv.gz は原本へのシンボリックリンク。
+BRCA_MID="$MAT_DIR/TCGA-BRCA.htseq_fpkm.tsv.gz"
+BRCA_OLD="$MAT_DIR/20260823_BRCA-HiseqV2-Tumor-Normal.xlsx"
 
 COAD_NEW="$MAT_DIR/20221216_COAD_TPM.xls"
 COAD_MID="$MAT_DIR/COAD_FPKM_UQ.xls"
@@ -128,6 +139,7 @@ if [ "$RUN_BRCA" = "yes" ]; then
         --cancer-type BRCA \
         --new-tpm       "$BRCA_NEW" \
         --mid-fpkm      "$BRCA_MID" \
+        --mid-log2p1 \
         --old-normcount "$BRCA_OLD" \
         --exclude-samples "$REF_DIR/ffpe_exclude_brca.txt" \
         --dedup-vials first \
