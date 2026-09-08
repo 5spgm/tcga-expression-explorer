@@ -84,12 +84,15 @@ const STRINGS = {
     backToTool: "← ツールに戻る",
     sourcesLink: "データの出典と引用",
     expressionSourceTitle: "発現データ",
-    expressionSourceLead: "旧世代の一部は、現在は閉鎖されたポータルから取得したものです。" +
+    expressionSourceLead: "旧世代はすべて、現在は閉鎖された TCGA のデータポータル " +
+                          "(http://cancergenome.nih.gov) から取得したものです。" +
                           "同じ値は他の公開リポジトリからも取得できますが、" +
                           "当時のコホート構成をそのまま再現することはできません。",
     sourceNotesTitle: "取得元について",
     subtypeSourceTitle: "分類(サブタイプ)の出典",
-    subtypeSourceLead: "分類の割り当ては以下の論文の補足資料に基づきます。" +
+    subtypeSourceLead: "分類の割り当ては以下の論文の補足資料に基づきます" +
+                       "(トリプルネガティブのみ、TCGA の BCR 臨床ファイルの" +
+                       "免疫組織化学の記載から判定しています)。" +
                        "利用の際は原著を引用してください。",
     termsTitle: "利用条件",
     colGeneration: "世代",
@@ -104,8 +107,14 @@ const STRINGS = {
     citeBody: "本ツールを研究に利用された場合は、下記リポジトリをご参照ください。" +
               "分類(サブタイプ)を利用した場合は、下に挙げた原著論文も併せて引用してください。",
     dataSourceTitle: "データの出典",
-    dataSourceBody: "発現データは NCI Genomic Data Commons、UCSC Xena、cBioPortal から取得しています。" +
-                    "分類の割り当ては以下の論文の補足資料に基づきます。",
+    dataSourceBody: "発現データは NCI Genomic Data Commons (GDC) と、その前身である TCGA Data " +
+                    "Coordinating Center のデータポータル (http://cancergenome.nih.gov、閉鎖済み) " +
+                    "から取得しています。旧世代はすべて後者から収集したものです。" +
+                    "乳がんの中期世代のみ、GDC がコホート単位の発現行列を配布しておらず、" +
+                    "HTSeq 期の値も現在の GDC からは取得できないため、UCSC Xena の GDC hub が" +
+                    "再配布している同じ HTSeq FPKM を用いています。" +
+                    "分類の割り当ては以下の論文の補足資料と、TCGA の BCR 臨床ファイル " +
+                    "(トリプルネガティブの免疫組織化学による判定) に基づきます。",
     dataSourceNote: "本ツールは研究目的で提供しています。診断や治療の判断には使用できません。" +
                     "TCGAデータの利用にあたっては、各提供元の利用規約に従ってください。",
     licenseNote: "コードは MIT License。表示内容の正確性は保証されません。",
@@ -182,13 +191,16 @@ const STRINGS = {
     backToTool: "← Back to the tool",
     sourcesLink: "Data sources and citation",
     expressionSourceTitle: "Expression data",
-    expressionSourceLead: "Part of the old-generation data was obtained from a portal that has since " +
-                          "been retired. The same values remain available from other public " +
-                          "repositories, but the cohort composition of that time cannot be reproduced.",
+    expressionSourceLead: "All old-generation data were obtained from the TCGA data portal " +
+                          "(http://cancergenome.nih.gov), which has since been retired. " +
+                          "The same values remain available from other public repositories, " +
+                          "but the cohort composition of that time cannot be reproduced.",
     sourceNotesTitle: "About the sources",
     subtypeSourceTitle: "Sources of the subtype assignments",
     subtypeSourceLead: "Subtype assignments are derived from the supplementary material of the " +
-                       "following papers. Please cite the original publications if you use them.",
+                       "following papers; triple-negative status alone is derived from the " +
+                       "immunohistochemistry fields of the TCGA BCR clinical files. " +
+                       "Please cite the original publications if you use them.",
     termsTitle: "Terms of use",
     colGeneration: "Generation",
     colPipeline: "Pipeline",
@@ -202,8 +214,15 @@ const STRINGS = {
     citeBody: "If you use this tool in your research, please refer to the repository below. " +
               "If you use the molecular subtype assignments, please also cite the original papers listed here.",
     dataSourceTitle: "Data sources",
-    dataSourceBody: "Expression data were obtained from the NCI Genomic Data Commons, UCSC Xena and cBioPortal. " +
-                    "Subtype assignments are derived from the supplementary material of the following papers.",
+    dataSourceBody: "Expression data were obtained from the NCI Genomic Data Commons (GDC) and from the " +
+                    "data portal of its predecessor, the TCGA Data Coordinating Center " +
+                    "(http://cancergenome.nih.gov, retired); all old-generation values came from the latter. " +
+                    "For the middle generation of the breast cohort only, the same HTSeq FPKM values were " +
+                    "taken from the GDC hub of UCSC Xena, because the GDC does not distribute cohort-level " +
+                    "expression matrices and the HTSeq-era values can no longer be retrieved from it. " +
+                    "Subtype assignments are derived from the supplementary material of the following " +
+                    "papers and from the TCGA BCR clinical files (immunohistochemistry-based " +
+                    "triple-negative status).",
     dataSourceNote: "This tool is provided for research purposes only and must not be used for diagnosis or treatment decisions. " +
                     "Use of TCGA data is subject to the terms of the respective data providers.",
     licenseNote: "Code is released under the MIT License. No warranty is given as to the accuracy of the displayed content.",

@@ -12,20 +12,26 @@ const SOURCE_DEFS = {
     name: "TCGA Data Coordinating Center (DCC) — Data Matrix",
     url: null,                    // 閉鎖済みのためリンクは張らない
     retired: true,
-    ja: "旧TCGA DCCのData Matrix (https://tcga-data.nci.nih.gov/)。" +
-        "2016年にNCI Genomic Data Commonsへ移行し、現在は閉鎖。" +
+    ja: "旧TCGAポータル (http://cancergenome.nih.gov) のData Matrix " +
+        "(https://tcga-data.nci.nih.gov/)。本ツールの旧世代は5がん種すべてを" +
+        "この経路から取得している。2016年にNCI Genomic Data Commonsへ移行し、現在は閉鎖。" +
         "当時は一度にダウンロードできる容量に上限があり、" +
         "複数の端末に分けて取得した。ダウンロード時には " +
         "file_manifest.txt / FILE_SAMPLE_MAP.txt / file_annotations.txt が" +
         "同梱され、後者にはDCCが解析対象から除外するよう指示した検体" +
-        "(Item flagged DNU)の記録が含まれる。",
-    en: "The Data Matrix of the former TCGA Data Coordinating Center " +
-        "(https://tcga-data.nci.nih.gov/), migrated to the NCI Genomic Data " +
-        "Commons in 2016 and now retired. The portal capped the size of a " +
+        "(Item flagged DNU)の記録が含まれる。" +
+        "この経路の行列は遺伝子行が SYMBOL|EntrezID 形式(例: TP53|7157)であり、" +
+        "遺伝子記号のみを用いる他の再配布元と区別できる。",
+    en: "The Data Matrix of the former TCGA portal (http://cancergenome.nih.gov) " +
+        "at https://tcga-data.nci.nih.gov/. All five old-generation cohorts in this " +
+        "tool were obtained by this route. It migrated to the NCI Genomic Data " +
+        "Commons in 2016 and is now retired. The portal capped the size of a " +
         "single download at the time, so files were retrieved across several " +
         "machines. Each download included file_manifest.txt, FILE_SAMPLE_MAP.txt " +
         "and file_annotations.txt; the last of these records aliquots the DCC " +
-        "flagged for exclusion from analysis (Item flagged DNU).",
+        "flagged for exclusion from analysis (Item flagged DNU). The matrices obtained " +
+        "by this route carry gene rows in SYMBOL|EntrezID form (e.g. TP53|7157), which " +
+        "distinguishes them from redistributions that use gene symbols alone.",
   },
   gdc_htseq: {
     name: "NCI Genomic Data Commons (HTSeq era)",
@@ -37,6 +43,39 @@ const SOURCE_DEFS = {
     en: "FPKM / FPKM-UQ from the HTSeq pipeline, downloaded while GDC Data " +
         "Releases 15–31 were current. Replaced by STAR-Counts at DR32 in 2022, " +
         "so the same files can no longer be obtained from the GDC.",
+  },
+  xena_gdc_hub: {
+    name: "UCSC Xena — GDC hub (GDC-PANCAN.htseq_fpkm)",
+    url: "https://xenabrowser.net/datapages/?dataset=GDC-PANCAN.htseq_fpkm.tsv&host=https%3A%2F%2Fgdc.xenahubs.net",
+    retired: false,
+    ja: "GDCのHTSeq期のFPKMを、UCSC XenaのGDC hubが再配布しているもの。" +
+        "GDCはコホート単位の発現行列を配布せず、HTSeq期の値は2022年のDR32以降" +
+        "取得できないため、乳がんの中期のみこの経路で取得した。" +
+        "取得日は2024-04-13で、当時は TCGA-BRCA.htseq_fpkm.tsv.gz として" +
+        "配布されていた(手元の .gz のタイムスタンプがこの日時。gzipヘッダには" +
+        "配布側のファイル時刻 2019-07-19 が残っている)。" +
+        "その後hubのカタログはSTAR期(gencode v36)に入れ替わり、" +
+        "コホート単位のHTSeq FPKMは削除された。2026-09-08時点で残っている" +
+        "HTSeq FPKMは pan-cancerの GDC-PANCAN.htseq_fpkm (gencode v22) だけで、" +
+        "本サイトの1,217検体はすべてこれに含まれ、値も一致する。" +
+        "Xenaはこのhubの発現値を log2(x+1) に変換して配布しているので、" +
+        "読み込み時に 2^x - 1 で線形スケールへ戻している。" +
+        "値の種類はFPKMで、他がん種の中期(FPKM-UQ)とは異なる。",
+    en: "HTSeq-era FPKM from the GDC, redistributed by the GDC hub of UCSC Xena. " +
+        "The GDC does not distribute cohort-level expression matrices and the " +
+        "HTSeq-era values became unavailable at DR32 in 2022, so this route was " +
+        "used for the middle generation of the breast cohort only. It was " +
+        "downloaded on 2024-04-13, when it was distributed as " +
+        "TCGA-BRCA.htseq_fpkm.tsv.gz (the timestamp of the local .gz; the gzip " +
+        "header still carries the distribution-side file time of 2019-07-19). " +
+        "The hub catalogue has since moved " +
+        "to the STAR era (gencode v36) and the cohort-level HTSeq FPKM datasets " +
+        "have been removed. As of 2026-09-08 the only HTSeq FPKM left is the " +
+        "pan-cancer GDC-PANCAN.htseq_fpkm (gencode v22); all 1,217 samples used " +
+        "here are present in it and the values agree. Xena distributes " +
+        "the values of this hub as log2(x+1); they are back-transformed with " +
+        "2^x - 1 on load. The quantity is FPKM, unlike the FPKM-UQ used for the " +
+        "other cohorts.",
   },
   gdc_star: {
     name: "NCI Genomic Data Commons (STAR-Counts)",
@@ -62,11 +101,19 @@ const DATA_SOURCES = {
     { generation: "old", pipeline: "UNC IlluminaHiSeq RNASeqV2", value: "normalized_count",
       source: "tcga_portal", acquired: "2014–2015" },
     { generation: "mid", pipeline: "GDC HTSeq", value: "FPKM",
-      source: "gdc_htseq", acquired: "2021" },
+      source: "xena_gdc_hub", acquired: "2024-04",
+      ja: "5がん種の中で唯一、GDCから直接取得できなかった層。値はFPKM(他は FPKM-UQ)で、" +
+          "log2(x+1)で配布されているため読み込み時に 2^x - 1 で線形へ戻している。",
+      en: "The only layer of the five cohorts that could not be obtained from the GDC " +
+          "directly. The quantity is FPKM (FPKM-UQ elsewhere) and is distributed as " +
+          "log2(x+1), so it is back-transformed with 2^x - 1 on load." },
     { generation: "new", pipeline: "GDC STAR-Counts", value: "TPM",
       source: "gdc_star", acquired: "2025-06",
-      ja: "FFPE由来の13検体を除外(うち1検体はvial文字が01A)。",
-      en: "13 FFPE-derived samples excluded; one of them carried the 01A vial letter." },
+      ja: "FFPEと判定された13検体のうち、同一患者×同一sample typeの別vialを持たない" +
+          "2検体が解析対象から外れた。残り11検体は重複vialの解消の段階で既に除去されている。",
+      en: "Of the 13 samples identified as FFPE, only 2 were actually dropped from the " +
+          "analysis, having no alternative vial of the same patient and sample type; the " +
+          "remaining 11 had already been removed at the vial-deduplication step." },
   ],
   COAD: [
     { generation: "old", pipeline: "UNC IlluminaHiSeq RNASeqV2", value: "normalized_count",
@@ -74,7 +121,11 @@ const DATA_SOURCES = {
     { generation: "mid", pipeline: "GDC HTSeq", value: "FPKM_UQ",
       source: "gdc_htseq", acquired: "2021" },
     { generation: "new", pipeline: "GDC STAR-Counts", value: "TPM",
-      source: "gdc_star", acquired: "2022-12" },
+      source: "gdc_star", acquired: "2022-12",
+      ja: "取得時のシートには頭頸部がん548検体が混在しており(大腸524検体)、" +
+          "Project ID列で選別している。",
+      en: "The sample sheet used at the time also listed 548 head-and-neck samples " +
+          "alongside the 524 colon samples; they are separated by the Project ID column." },
   ],
   PAAD: [
     { generation: "old", pipeline: "UNC IlluminaHiSeq RNASeqV2", value: "normalized_count",
@@ -106,7 +157,12 @@ const DATA_SOURCES = {
     { generation: "mid", pipeline: "GDC HTSeq", value: "FPKM_UQ",
       source: "gdc_htseq", acquired: "2021-02-05" },
     { generation: "new", pipeline: "GDC STAR-Counts", value: "TPM",
-      source: "gdc_star", acquired: "2026-09" },
+      source: "gdc_star", acquired: "2024-10",
+      ja: "検体ごとのファイルは2024-10-14に取得し、行列は2024-10-18に作成した。" +
+          "2026-09-05に再出力した取得シートも、検体集合とFile Name集合が一致する。",
+      en: "The per-sample files were downloaded on 2024-10-14 and the matrix was built " +
+          "on 2024-10-18. A sample sheet re-exported on 2026-09-05 lists an identical " +
+          "set of samples and file names." },
   ],
 };
 
