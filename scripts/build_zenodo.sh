@@ -172,6 +172,36 @@ sha256sum "$TARBALL" > "$TARBALL.sha256"
 
 echo "  $TARBALL"
 echo "    $(du -h "$TARBALL" | cut -f1) / $(tar tzf "$TARBALL" | wc -l) ファイル"
+
+# =====================================================================
+# 4. 出力の検証
+# =====================================================================
+# 書き出し中のビット化けを検出する。2026-09-08 のビルドでは 15 本のうち
+# LUAD:mid の .tsv.gz が1本だけ CRC 不整合で書き出され、checksums.sha256 の
+# 記録とも一致しなかった(同じファイルの sha256 が読むたびに変わる現象も
+# 1回だけ発生)。作り直したら通ったので、書き込み/読み出し時の一過性の異常
+# と考えられる。破損したまま寄託すると受け取った人が展開できないため、
+# ここで必ず検査する。
+echo; echo "================ 3. 出力の検証 ================"
+BAD=0
+N_GZ=0
+for f in $(find "$OUT" -name "*.tsv.gz" | sort); do
+    N_GZ=$((N_GZ+1))
+    gzip -t "$f" 2>/dev/null || { echo "  ★ 破損: ${f#$OUT/}"; BAD=$((BAD+1)); }
+done
+NG=$( cd "$OUT" && sha256sum -c checksums.sha256 2>/dev/null | grep -vc ': OK$' )
+if tar tzf "$TARBALL" > /dev/null 2>&1; then TAR_OK=OK; else TAR_OK=NG; fi
+echo "  gzip 検査:       異常 $BAD / $N_GZ 件"
+echo "  checksums 照合:  不一致 $NG 件"
+echo "  tarball 展開検査: $TAR_OK"
+if [ "$BAD" -ne 0 ] || [ "$NG" -ne 0 ] || [ "$TAR_OK" != OK ]; then
+    echo
+    echo "  ★ 出力に異常があります。アップロードしないでください。"
+    echo "    該当ファイルを作り直し、checksums.sha256 と tarball も作り直して"
+    echo "    から、もう一度この検証を通してください。"
+    exit 1
+fi
+echo "  異常なし。"
 echo
 echo "Zenodoにアップロードするもの:"
 echo "  1. $TARBALL"

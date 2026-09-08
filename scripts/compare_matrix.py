@@ -8,10 +8,19 @@ Excel 往復で失われた桁があれば相対差として現れる。
 import sys, numpy as np, pandas as pd
 
 def load(p):
-    if p.endswith((".xlsx", ".xls")):
-        df = pd.read_excel(p, index_col=0)
+    # 形式の判定は拡張子ではなく先頭バイトで行う。このプロジェクトには
+    # 「中身がタブ区切りテキストなのに拡張子が .xls」のファイルが実在する
+    # (COAD_FPKM_UQ.xls / 20221216_COAD_TPM.xls / LUAD_FPKM_UQ.xls)。
+    with open(p, "rb") as fh:
+        magic = fh.read(8)
+    if magic[:4] == b"PK\x03\x04":
+        df = pd.read_excel(p, index_col=0, engine="openpyxl")   # xlsx (zip)
+    elif magic[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+        df = pd.read_excel(p, index_col=0, engine="xlrd")       # 旧 xls (OLE2)
     else:
-        df = pd.read_csv(p, sep="\t", index_col=0, low_memory=False)
+        # 圧縮の判定も先頭バイトで行う(拡張子が .gz でなくても中身がgzipなら読む)
+        comp = "gzip" if magic[:2] == b"\x1f\x8b" else None
+        df = pd.read_csv(p, sep="\t", index_col=0, low_memory=False, compression=comp)
     df.index = df.index.astype(str).str.strip()
     df.columns = [str(c).strip() for c in df.columns]
     return df
