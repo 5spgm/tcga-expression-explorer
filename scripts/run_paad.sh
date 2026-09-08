@@ -16,7 +16,7 @@ REF_DIR="/media/nighthawk/_mnt_16TB/webtool/tcga_ref"
 MAT_DIR="/media/nighthawk/_mnt_16TB/webtool/tcga_matrix"
 
 PAAD_NEW="$MAT_DIR/TCGA_PAAD_TPM.tsv"          # 新世代(make_star_matrix.pyの出力)
-PAAD_MID="$MAT_DIR/PAAD_FPKM_UQ.xlsx"          # 中期
+PAAD_MID="$MAT_DIR/20260824_PAAD_FPKM_UQ.xlsx" # 中期
 PAAD_OLD="$MAT_DIR/TCGA-PANC-RNAseq.txt"       # 旧世代(2015年取得, Xena形式)
 
 # TCGA-PAAD marker paper (Raphael et al., Cancer Cell 2017) の Table S1

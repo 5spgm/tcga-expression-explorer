@@ -42,7 +42,7 @@ MATRICES=(
 
   "PAAD:old=TCGA-PANC-RNAseq.txt:normalized_count"
   "PAAD:mid=20260824_PAAD_FPKM_UQ.xlsx:FPKM_UQ"
-  "PAAD:new=20260824_TCGA_PAAD_TPM.xlsx:TPM"
+  "PAAD:new=TCGA_PAAD_TPM.tsv:TPM"
 
   "LUAD:old=LUAD-Hiseq-v2.txt:normalized_count"
   "LUAD:mid=LUAD_FPKM_UQ.xls:FPKM_UQ"
