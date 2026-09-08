@@ -31,7 +31,7 @@ There is one exception for the intermediate generation: the breast cancer
 intermediate matrix in this package was downloaded from the UCSC Xena GDC hub on
 **2024-04-13**, as `TCGA-BRCA.htseq_fpkm.tsv.gz` (the date is the timestamp of
 the local .gz; the gzip header still carries the distribution-side file time of
-2019-07-19, and the SHA-256 of the extracted tsv matches the stream decompressed
+2019-07-18 22:22:54 UTC, and the SHA-256 of the extracted tsv matches the stream decompressed
 from that .gz). What Xena distributes is log2(FPKM+1)
 rather than raw FPKM (see Contents below). For every other cohort, a copy
 downloaded at the time is the only route to these values.
@@ -89,7 +89,9 @@ matrix/<cancer>/<cancer>_<generation>_<value_type>.tsv.gz
     b5856c84…). Two consequences distinguish it from the other 14 files:
       - its first column is named Ensembl_ID, not gene_id
       - its gzip header still carries the distribution-side filename
-        TCGA-BRCA.htseq_fpkm.tsv and file time 2019-07-19 07:22:54
+        TCGA-BRCA.htseq_fpkm.tsv and file time 2019-07-18 22:22:54 UTC
+        (gzip stores UTC seconds in the header and gzip -l renders them in the
+        local timezone, so it prints 2019-07-19 07:22:54 in JST)
         (inspect with gzip -l or zcat -f)
     The figures on the public site were produced from an xlsx conversion of
     this same .gz. Across the first 100 genes x all 1,217 samples the two
