@@ -95,14 +95,42 @@ def patient_id(sample_id: str) -> str:
     return str(sample_id)[:12]
 
 
+# GDC sample sheet には2つの世代がある。
+#   旧(〜2024頃): 8列目が "Sample Type"  値は "Primary Tumor" / "Metastatic" など
+#   新(2025〜)  : 8列目が "Tissue Type"  値は "Tumor" / "Normal"
+#                 加えて "Tumor Descriptor"(Primary/Metastatic) と
+#                 "Preservation Method"(FFPE/OCT) が入る
+# どちらでも動くよう、検体の種別を表す列を自動検出する。
+TYPE_COL_CANDIDATES = ["Sample Type", "Tissue Type"]
+
+
+def find_type_column(sheet: pd.DataFrame) -> str:
+    for c in TYPE_COL_CANDIDATES:
+        if c in sheet.columns:
+            return c
+    raise SystemExit(
+        f"検体の種別を表す列が見つかりません。'Sample Type' か 'Tissue Type' が必要です。\n"
+        f"  実際の列: {list(sheet.columns)}")
+
+
+def describe_sample_types(sheet: pd.DataFrame, type_col: str) -> None:
+    """種別の内訳を表示する。新形式では Tumor Descriptor も併せて出す
+    (Tissue Type だけだと転移巣が原発巣と区別できないため)。"""
+    print(f"  検体種別の列: '{type_col}'")
+    for val, n in sheet[type_col].value_counts().items():
+        print(f"      {val}: {n}")
+    if "Tumor Descriptor" in sheet.columns:
+        print("  Tumor Descriptor の内訳:")
+        for val, n in sheet["Tumor Descriptor"].value_counts().items():
+            print(f"      {val}: {n}")
+
+
 def select_files(sheet: pd.DataFrame, prefer_vial: str) -> pd.DataFrame:
     """1検体につき1ファイルを選び、同一患者×同一sample typeの重複vialを
     1つに絞る。sample typeによる取捨選択はここでは行わない。"""
     print(f"  sample sheet: {len(sheet)} 行 / "
           f"{sheet['Case ID'].nunique()} 患者 / {sheet['Sample ID'].nunique()} 検体")
-    print("  sample type の内訳:")
-    for val, n in sheet["Sample Type"].value_counts().items():
-        print(f"      {val}: {n}")
+    describe_sample_types(sheet, find_type_column(sheet))
 
     # (1) 同一 Sample ID に複数ファイルがある場合は先頭を採用
     dup_samples = sheet["Sample ID"].value_counts()
@@ -251,9 +279,10 @@ def main():
     print("1. sample sheet から読むファイルを決める")
     print("=" * 60)
     sheet = pd.read_csv(args.sample_sheet, sep="\t", dtype=str).fillna("")
-    for col in ("File Name", "Case ID", "Sample ID", "Sample Type"):
+    for col in ("File Name", "Case ID", "Sample ID"):
         if col not in sheet.columns:
             sys.exit(f"sample sheet に '{col}' 列がありません。列名: {list(sheet.columns)}")
+    type_col = find_type_column(sheet)
     picked = select_files(sheet, args.prefer_vial)
 
     if args.manifest:
