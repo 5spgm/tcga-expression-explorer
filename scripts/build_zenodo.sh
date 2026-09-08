@@ -28,12 +28,7 @@ MATRICES=(
   # そのまま置いている。値の種類を "FPKM" と書くと寄託ファイル名と inventory.json が
   # 中身を偽ることになるので、スケールまで名前に出す。
   # 再現時は preprocess_tcga.py に --mid-fpkm と --mid-log2p1 の両方が必要。
-  # 中期の乳がんだけは UCSC Xena から取得した原本 .gz をそのまま寄託する。
-  # to_tsv_gz は入力が既にgzipならbyte-for-byteでコピーするので、Excel往復の
-  # 丸め(最大 3.2e-14)が入らず、gzipヘッダ内の配布側の名前と時刻も残る。
-  # tcga_matrix/TCGA-BRCA.htseq_fpkm.tsv.gz は原本へのシンボリックリンク
-  # (原本のファイル名にはブラウザ由来の " (1)" が付いている)。
-  "BRCA:mid=TCGA-BRCA.htseq_fpkm.tsv.gz:FPKM_log2p1"
+  "BRCA:mid=20260823_TCGA-BRCA.htseq_fpkm.xlsx:FPKM_log2p1"
   "BRCA:new=TCGA_BRCA_TPM.xlsx:TPM"
 
   "COAD:old=COAD-HiseqV2-20150129.txt:normalized_count"
