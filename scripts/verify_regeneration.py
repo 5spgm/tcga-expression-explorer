@@ -1,13 +1,16 @@
-"""xlsx 経路で作った BRCA の遺伝子JSONと、原本 .gz 経路で作り直したものを
-全遺伝子で突き合わせる。
+"""2つの出力ディレクトリの遺伝子JSONを全遺伝子で突き合わせる。
 
-new / old は同じ入力・同じ処理なので完全一致するはず(構造の取り違えを検出する)。
-mid は Excel往復の丸めだけ違うので、相対差の最大値を測る。
+  python3 verify_regeneration.py <公開側ディレクトリ> <再生成側ディレクトリ> [出力JSON]
+
+同じ入力・同じ処理なら完全一致するはず(構造の取り違えやビット化けを検出する)。
+入力を変えた世代については相対差・絶対差の最大値を測る。
+BRCA中期のように Excel往復の丸めが消える場合、差は倍精度の丸め幅に収まる。
 """
 import json, os, sys, math
 from multiprocessing import Pool
 
 A_DIR, B_DIR = sys.argv[1], sys.argv[2]
+OUT_JSON = sys.argv[3] if len(sys.argv) > 3 else "verify_regeneration.json"
 
 
 def walk(obj, path=""):
@@ -41,6 +44,10 @@ def compare(fname):
            "max_rel": 0.0, "max_abs": 0.0, "n_values": 0}
 
     for gen in ("new", "mid", "old"):
+        if gen not in a and gen not in b:
+            # その世代を持たない遺伝子(旧世代は約4万遺伝子で欠ける)。両側で欠けて
+            # いるのは一致であって不一致ではない。
+            continue
         if gen not in a or gen not in b:
             res["gen_keys_ok"] = False
             continue
@@ -131,7 +138,8 @@ def main():
     json.dump({k: v for k, v in agg.items() if k not in ("missing", "meta_bad", "keys_bad", "len_bad", "unreadable", "hard_diff")}
               | {k: agg[k][:50] for k in ("missing", "meta_bad", "keys_bad", "len_bad",
                                           "unreadable", "hard_diff")},
-              open("brca_gz_vs_xlsx.json", "w"), indent=1)
+              open(OUT_JSON, "w"), indent=1)
+    print(f"→ {OUT_JSON}")
 
 
 if __name__ == "__main__":
