@@ -77,9 +77,32 @@ def to_tsv_gz(src: Path, dst: Path) -> None:
     """
     dst.parent.mkdir(parents=True, exist_ok=True)
 
-    if src.suffix.lower() in (".xlsx", ".xls"):
+    # 中身の判定は拡張子ではなく先頭バイトで行う。
+    # このプロジェクトには「中身がTSVなのに拡張子が .xls」のファイルが実在する
+    # (COAD_FPKM_UQ.xls / 20221216_COAD_TPM.xls / LUAD_FPKM_UQ.xls の3件)。
+    # 拡張子で pd.read_excel に渡すと
+    #   ValueError: Excel file format cannot be determined
+    # で寄託パッケージのビルドが止まる。
+    with src.open("rb") as fi:
+        magic = fi.read(8)
+    if magic[:4] == b"PK\x03\x04":
+        engine = "openpyxl"          # xlsx (zip)
+    elif magic[:8] == b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+        engine = "xlrd"              # 旧 xls (OLE2)
+    else:
+        engine = None                # プレーンテキスト or gzip
+
+    # 拡張子と中身が食い違うファイルは寄託物の由来として記録に残す
+    ext = src.suffix.lower()
+    if (engine is None and ext in (".xlsx", ".xls")) or (
+            engine is not None and ext in (".txt", ".tsv", ".csv")):
+        print(f"      [注意] {src.name}: 拡張子 {ext} だが中身は "
+              f"{'テキスト' if engine is None else 'Excel'}。中身に従って処理します",
+              flush=True)
+
+    if engine is not None:
         print(f"      {src.name} をTSVに変換中…(数分かかります)", flush=True)
-        df = pd.read_excel(src)
+        df = pd.read_excel(src, engine=engine)
         # R の write.table 由来で遺伝子ID列がインデックスに吸われている場合を戻す
         if df.index.name is not None or not isinstance(df.index, pd.RangeIndex):
             df = df.reset_index()
@@ -92,9 +115,7 @@ def to_tsv_gz(src: Path, dst: Path) -> None:
             df.to_csv(fo, sep="\t", index=False)
         return
 
-    with src.open("rb") as fi:
-        magic = fi.read(2)
-    if magic == b"\x1f\x8b":       # 既にgzip
+    if magic[:2] == b"\x1f\x8b":       # 既にgzip
         shutil.copyfile(src, dst)
         return
     with src.open("rb") as fi, gzip.open(dst, "wb", compresslevel=9) as fo:
@@ -195,9 +216,14 @@ def main():
     ap.add_argument("--exclude-list", action="append", default=[],
                     metavar="がん種=ファイル名", help="除外リスト(任意、複数回可)")
     ap.add_argument("--provenance", action="append", default=[],
-                    metavar="がん種:世代=ディレクトリ",
+                    metavar="がん種:世代=ディレクトリまたはファイル[::寄託名]",
                     help="取得時のGDC sample sheet / manifest が残っている"
-                         "ディレクトリ。中の *sample_sheet*.tsv と *manifest*.txt を"
+                         "ディレクトリ。ファイルを直接指定してもよく、その場合は"
+                         "そのファイルだけを寄託する(用途の違う manifest が"
+                         "同居しているディレクトリで使う)。'::名前' を付けると"
+                         "寄託時のファイル名を変えられる。同じ がん種:世代 に対して"
+                         "複数回指定できる。"
+                         "ディレクトリ指定では中の *sample_sheet*.tsv と *manifest*.txt を"
                          "取得日つきで収録する。複数回指定可")
     ap.add_argument("--example-genes", default="TP53,KRAS",
                     help="縦持ちの見本に含める遺伝子シンボル(カンマ区切り)")
@@ -273,7 +299,12 @@ def main():
             if not src.is_file():
                 print(f"  [警告] 見つかりません: {fname}")
                 continue
-            dst = out / "exclude" / f"{cancer}_{src.name}"
+            # ファイル名が既にがん種で始まっている場合は接頭辞を足さない。
+            # 足すと PAAD_exclude_all.txt -> PAAD_PAAD_exclude_all.txt になり、
+            # READMEの再現コマンドに書いたパスと食い違う。
+            stem = src.name if src.name.upper().startswith(cancer.upper() + "_") \
+                   else f"{cancer}_{src.name}"
+            dst = out / "exclude" / stem
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
             n = sum(1 for line in dst.read_text().splitlines() if line.strip())
@@ -297,9 +328,27 @@ def main():
             except ValueError:
                 sys.exit(f"--provenance の形式が不正です: {spec}\n"
                          f"  正しい形式: がん種:世代=ディレクトリ")
+            # 右辺はディレクトリでもファイルでもよい。
+            # ディレクトリを指すと下の PATTERNS に合う全ファイルを拾うが、
+            # 1つのディレクトリに用途の違う manifest が同居している場合がある。
+            # 実例: $TC/TCGA-PAAD/ には
+            #   file_manifest.txt      Clinical(Biotab) 17行 … 旧世代RNA-seqとは無関係
+            #   file_manifest (2).txt  RNASeqV2 Level3 264行 … これが旧世代の記録
+            # の2本があり、ディレクトリごと拾うと前者まで
+            # 「旧世代の取得記録」として寄託してしまう。
+            # そのためファイル単位の指定を許し、"元パス::寄託時の名前" で
+            # 名前を付け替えられるようにしている
+            # (元のフルパスは inventory.json の source_path に残る)。
+            rename = None
+            if "::" in src_dir:
+                src_dir, rename = src_dir.rsplit("::", 1)
             src = Path(src_dir)
-            if not src.is_dir():
-                print(f"  [警告] ディレクトリがありません: {src}")
+            if src.is_file():
+                found_files, use_patterns = [src], False
+            elif src.is_dir():
+                found_files, use_patterns = [], True
+            else:
+                print(f"  [警告] ファイルもディレクトリもありません: {src}")
                 continue
             # GDC形式(2016年以降)と、旧TCGA DCCのData Matrix形式の両方を拾う。
             # 旧DCC形式は file_manifest.txt / FILE_SAMPLE_MAP.txt /
@@ -313,17 +362,20 @@ def main():
                 "FILE_SAMPLE_MAP.txt", "file_annotations.txt",    # 旧DCC
                 "README_DCC.txt",
             )
-            seen, found = set(), []
-            for pat in PATTERNS:
-                for f in sorted(src.glob(pat)):
-                    if f.name not in seen:
-                        seen.add(f.name)
-                        found.append(f)
+            found = found_files
+            if use_patterns:
+                seen = set()
+                for pat in PATTERNS:
+                    for f in sorted(src.glob(pat)):
+                        if f.name not in seen:
+                            seen.add(f.name)
+                            found.append(f)
             if not found:
                 print(f"  [警告] {src} に sample sheet / manifest が見つかりません")
                 continue
             for f in found:
-                dst = out / "provenance" / cancer.strip() / gen.strip() / f.name
+                name = rename if (rename and len(found) == 1) else f.name
+                dst = out / "provenance" / cancer.strip() / gen.strip() / name
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copyfile(f, dst)
                 mtime = datetime.fromtimestamp(f.stat().st_mtime).strftime("%Y-%m-%d")
@@ -333,7 +385,9 @@ def main():
                     "file": str(dst.relative_to(out)), "file_mtime": mtime,
                     "n_rows": n_rows, "source_path": str(f),
                 })
-                print(f"  {cancer.strip():<6} {gen.strip():<4} {f.name:<44} "
+                # 表示は寄託後の名前。付け替えた場合は元の名前も出す
+                shown = name if name == f.name else f"{name} (元: {f.name})"
+                print(f"  {cancer.strip():<6} {gen.strip():<4} {shown:<44} "
                       f"更新日 {mtime} / {n_rows} 行")
 
     # --- 5. 目録とチェックサム -------------------------------------------
