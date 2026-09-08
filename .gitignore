@@ -36,6 +36,7 @@ corrected_file_list*.tsv
 # --- 実行時に生成される中間物 ---
 entrez_cache.json
 run_*.log
+build_*.log
 *.tsv
 !corrected_file_list_example.tsv
 
