@@ -66,7 +66,45 @@ def sha256(path: Path, chunk: int = 1 << 20) -> str:
     return h.hexdigest()
 
 
-def to_tsv_gz(src: Path, dst: Path) -> None:
+def load_relabel_map(path: Path) -> dict[int, tuple[str, str]]:
+    """列名の復元表を読む。
+
+    書式は col_index / current_label / new_label で始まるTSV(先頭 '#' は注釈)。
+    col_index は書き出し後のヘッダにおける0始まりの位置。
+    上流のマージで barcode が失われた列(COAD新世代のNA / NA.x / NA.y)を、
+    GDCから再取得した値との突き合わせで同定した結果を反映するために使う。
+    """
+    m: dict[int, tuple[str, str]] = {}
+    for line in path.read_text().splitlines():
+        if not line.strip() or line.startswith("#"):
+            continue
+        f = line.split("\t")
+        if f[0] == "col_index":
+            continue
+        m[int(f[0])] = (f[1], f[2])
+    return m
+
+
+def apply_relabel(header: list, relabel: dict[int, tuple[str, str]],
+                  src_name: str) -> None:
+    """ヘッダを位置指定で書き換える。想定と違えば止める。
+
+    位置だけで書き換えると、元ファイルが差し替わったときに黙って別の列の
+    名前を変えてしまう。現在の名前が復元表と一致することを必ず確かめる。
+    """
+    for i, (cur, new) in sorted(relabel.items()):
+        if i >= len(header):
+            raise SystemExit(f"[復元表] {src_name}: 列 {i} が存在しません "
+                             f"(列数 {len(header)})")
+        if str(header[i]) != cur:
+            raise SystemExit(f"[復元表] {src_name}: 列 {i} は '{cur}' のはずが "
+                             f"'{header[i]}' でした。元ファイルが変わっています")
+        header[i] = new
+    print(f"      {src_name}: 列名を {len(relabel)} 件復元しました", flush=True)
+
+
+def to_tsv_gz(src: Path, dst: Path,
+              relabel: dict[int, tuple[str, str]] | None = None) -> None:
     """発現行列を TSV.gz として書き出す。
 
     寄託物は「拡張子が中身を正しく表している」ことが重要なので、
@@ -111,8 +149,24 @@ def to_tsv_gz(src: Path, dst: Path) -> None:
         first = str(df.columns[0])
         if first.startswith("Unnamed") or first in ("", "index"):
             df = df.rename(columns={df.columns[0]: "gene_id"})
+        if relabel:
+            cols = list(df.columns)
+            apply_relabel(cols, relabel, src.name)
+            df.columns = cols
         with gzip.open(dst, "wt", compresslevel=9, encoding="utf-8", newline="") as fo:
             df.to_csv(fo, sep="\t", index=False)
+        return
+
+    if relabel:
+        # ヘッダ行だけ差し替え、値の部分は1バイトも触らずに通す。
+        opener = (lambda: gzip.open(src, "rt", encoding="utf-8", newline="")) \
+            if magic[:2] == b"\x1f\x8b" else (lambda: src.open("rt", encoding="utf-8", newline=""))
+        with opener() as fi, gzip.open(dst, "wt", compresslevel=9,
+                                       encoding="utf-8", newline="") as fo:
+            header = fi.readline().rstrip("\n").split("\t")
+            apply_relabel(header, relabel, src.name)
+            fo.write("\t".join(header) + "\n")
+            shutil.copyfileobj(fi, fo, length=1 << 20)
         return
 
     if magic[:2] == b"\x1f\x8b":       # 既にgzip
@@ -215,6 +269,10 @@ def main():
                     help="寄託する発現行列。複数回指定する")
     ap.add_argument("--exclude-list", action="append", default=[],
                     metavar="がん種=ファイル名", help="除外リスト(任意、複数回可)")
+    ap.add_argument("--relabel", action="append", default=[],
+                    metavar="がん種:世代=復元表TSV",
+                    help="列名の復元表(任意、複数回可)。上流のマージで barcode が"
+                         "失われた列を、位置指定で正しい名前に戻す")
     ap.add_argument("--provenance", action="append", default=[],
                     metavar="がん種:世代=ディレクトリまたはファイル[::寄託名]",
                     help="取得時のGDC sample sheet / manifest が残っている"
@@ -240,6 +298,10 @@ def main():
     print("1. 発現行列")
     print("=" * 60)
     specs = [parse_matrix_spec(s) for s in args.matrix]
+    relabels: dict[str, dict[int, tuple[str, str]]] = {}
+    for spec in args.relabel:
+        key, path = spec.split("=", 1)
+        relabels[key] = load_relabel_map(Path(path))
     by_cancer: dict[str, dict[str, Path]] = defaultdict(dict)
     inventory = []
     for cancer, gen, fname, vtype in specs:
@@ -247,7 +309,7 @@ def main():
         if not src.is_file():
             sys.exit(f"見つかりません: {src}")
         dst = out / "matrix" / cancer / f"{cancer}_{gen}_{vtype}.tsv.gz"
-        to_tsv_gz(src, dst)
+        to_tsv_gz(src, dst, relabel=relabels.get(f"{cancer}:{gen}"))
         by_cancer[cancer][gen] = src
         # 行数・列数を数える(検証用のメタ情報として残す)
         try:
@@ -255,10 +317,13 @@ def main():
                 ncol = len(fh.readline().rstrip("\n").split("\t"))
         except Exception:  # noqa: BLE001
             ncol = 0
-        inventory.append({"cancer_type": cancer, "generation": gen,
-                          "value_type": vtype, "file": str(dst.relative_to(out)),
-                          "source_file": fname, "n_columns": ncol,
-                          "size_mb": round(dst.stat().st_size / 1e6, 1)})
+        entry = {"cancer_type": cancer, "generation": gen,
+                 "value_type": vtype, "file": str(dst.relative_to(out)),
+                 "source_file": fname, "n_columns": ncol,
+                 "size_mb": round(dst.stat().st_size / 1e6, 1)}
+        if relabels.get(f"{cancer}:{gen}"):
+            entry["relabelled_columns"] = len(relabels[f"{cancer}:{gen}"])
+        inventory.append(entry)
         print(f"  {cancer:<6} {gen:<4} {vtype:<18} -> {dst.relative_to(out)} "
               f"({dst.stat().st_size/1e6:,.1f} MB)")
 
@@ -307,8 +372,15 @@ def main():
             dst = out / "exclude" / stem
             dst.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(src, dst)
-            n = sum(1 for line in dst.read_text().splitlines() if line.strip())
-            print(f"  {cancer}: {n} 件 -> {dst.relative_to(out)}")
+            n = sum(1 for line in dst.read_text().splitlines()
+                    if line.strip() and not line.startswith("#"))
+            if n == 0:
+                # 0バイトのまま配ると「作り忘れ」と「除外なし」の区別が付かない。
+                # STAD にはFFPE検体が無く、このリストは正しく空になる。
+                dst.write_text("# none - このがん種では除外指定なし "
+                               "(no samples excluded for this cohort)\n")
+            print(f"  {cancer}: {n} 件 -> {dst.relative_to(out)}"
+                  f"{' (none と明記)' if n == 0 else ''}")
 
     # --- 4. 取得時の記録 -------------------------------------------------
     # GDCは更新のたびに配布内容を差し替えるため、「いつ、どのファイルを

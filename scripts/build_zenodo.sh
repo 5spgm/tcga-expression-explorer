@@ -74,6 +74,8 @@ PROVENANCE=(
   "COAD:old=$TC/TCGA-Colon_rectal_cancer/COAD-HiseqV2"
   "COAD:mid=$TC/TCGA-COAD/20210205_COAD_FPKM_UQ"
   "COAD:new=$TC/TCGA-COAD/20221216_COAD_STAR_counts"
+  # 復元表そのものも寄託して、どの列をどう直したかを追えるようにする
+  "COAD:new=$REPO/reference/COAD_new_column_labels.tsv::COAD_new_recovered_columns.tsv"
 
   "LUAD:old=$TC/TCGA-LUAD"
   "LUAD:mid=$TC/TCGA-LUAD/20210205_LUAD_FPKM_UQ"
@@ -102,6 +104,13 @@ PROVENANCE=(
 )
 
 # --- 除外リスト: "がん種=ファイル" --------------------------------------
+# 上流のマージで barcode が失われた列の復元表。
+# COAD新世代 (20221216_COAD_TPM.xls) の NA / NA.x / NA.y 25列は、GDCから
+# STAR-Counts を再取得し 60,660遺伝子のTPMが全行一致する検体を探して同定した。
+RELABELS=(
+  "COAD:new=$REPO/reference/COAD_new_column_labels.tsv"
+)
+
 EXCLUDES=(
   "BRCA=$REF/ffpe_exclude_brca.txt"
   "PAAD=$REF/subtypes/paad/PAAD_exclude_all.txt"
@@ -140,6 +149,7 @@ for p in "${PROVENANCE[@]}"; do ARGS+=(--provenance "$p"); done
 for e in "${EXCLUDES[@]}";   do
     f="${e#*=}"; [ -f "$f" ] && ARGS+=(--exclude-list "$e")
 done
+for r in "${RELABELS[@]}";   do ARGS+=(--relabel "$r"); done
 
 echo; echo "================ 1. パッケージ作成 ================"
 echo "  (xlsxはTSVに変換するため、1ファイルあたり数分かかります)"
@@ -189,7 +199,9 @@ for f in $(find "$OUT" -name "*.tsv.gz" | sort); do
     N_GZ=$((N_GZ+1))
     gzip -t "$f" 2>/dev/null || { echo "  ★ 破損: ${f#$OUT/}"; BAD=$((BAD+1)); }
 done
-NG=$( cd "$OUT" && sha256sum -c checksums.sha256 2>/dev/null | grep -vc ': OK$' )
+# grep -c は該当0件のとき終了コード1を返す。set -e のもとでは
+# 「全件一致」のときにここでスクリプトが落ちるので、|| true で受ける。
+NG=$( cd "$OUT" && sha256sum -c checksums.sha256 2>/dev/null | grep -vc ': OK$' || true )
 if tar tzf "$TARBALL" > /dev/null 2>&1; then TAR_OK=OK; else TAR_OK=NG; fi
 echo "  gzip 検査:       異常 $BAD / $N_GZ 件"
 echo "  checksums 照合:  不一致 $NG 件"

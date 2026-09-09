@@ -103,9 +103,15 @@ sample_annotation/<cancer>_samples.tsv
     to, and which subtype assignments apply. Barcode granularity differs
     between generations (the old generation omits the vial letter), so rows
     are keyed on patient ID plus sample type code.
+    The table describes the analysis set behind the public site, so it does
+    not cover the 25 colorectal columns whose labels were restored after the
+    site data were generated (see Sample selection); those are listed in
+    provenance/COAD/new/COAD_new_recovered_columns.tsv instead.
 
 exclude/
     Samples removed from the analysis, with the basis for removal.
+    A cohort with nothing to exclude gets a file containing `# none`, so that
+    "no samples were excluded" is distinguishable from "the list is missing".
 
 provenance/<cancer>/<generation>/
     The GDC sample sheet and download manifest as they were at the time of
@@ -183,6 +189,20 @@ checked against `exclude/` and `sample_annotation/`.
 - **In pancreatic cancer, 28 samples are excluded**: 19 determined not to be
   pancreatic ductal adenocarcinoma, and 9 with very low neoplastic cellularity
   (Raphael et al. 2017, Table S1).
+- **In colorectal cancer, 25 columns of the new-generation matrix carry
+  labels restored after the fact.** The upstream merge that assembled the
+  source matrix left 25 of its 524 columns without a barcode (`NA`, `NA.x`,
+  `NA.y`). Each was identified by re-downloading the STAR-Counts files from
+  the GDC and looking for the file whose `tpm_unstranded` values agree with
+  the column across all 60,660 genes: every column matched exactly one file,
+  and every candidate file was consumed. 15 are samples the matrix does not
+  otherwise contain (second vials, one metastasis, one recurrence) and carry
+  the 16-character sample barcode; the other 10 are a second aliquot of a
+  sample already present and carry the full aliquot barcode, so that no two
+  columns share a name. `provenance/COAD/new/COAD_new_recovered_columns.tsv`
+  lists all 25 with their GDC file identifiers. **The figures on the public
+  site predate this recovery** and were produced from the 499 columns that
+  carried a barcode at the time; the deposited matrix has 524.
 
 ---
 

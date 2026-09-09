@@ -625,6 +625,10 @@ def main():
         ids = set()
         for line in raw:
             token = line.split(",")[0].strip()
+            # '#' 始まりは注釈。除外なしのリストは "# none" と書いてあるので、
+            # これをバーコードとして拾うと除外件数が1件に見えてしまう。
+            if token.startswith("#"):
+                continue
             if not token or token.lower() in ("barcode", "sample_id", "patient_id", "sample"):
                 continue
             ids.add(token)
