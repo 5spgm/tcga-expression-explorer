@@ -1,0 +1,8 @@
+# Analysis and figure code for the TCGA Expression Explorer manuscript.
+# Python 3.11 (tested on 3.11.15).
+pandas==2.3.3
+numpy==2.4.6
+scipy==1.17.1
+matplotlib==3.11.0
+openpyxl==3.1.5        # reading the .xlsx matrices distributed by the GDC exports
+mygene==3.2.2          # Entrez -> Ensembl resolution in scripts/preprocess_tcga.py

@@ -1,0 +1,156 @@
+{
+ "COAD": {
+  "n_specimens_compared": 20,
+  "n_specimens_excluded": 0,
+  "sample_type_codes": [
+   "01",
+   "11"
+  ],
+  "n_genes_compared": 294,
+  "n_legacy_detected": 265,
+  "by_group": {
+   "nested same strand": {
+    "n": 30,
+    "lost": 22,
+    "pct": 73.33333333333333
+   },
+   "nested opposite strand": {
+    "n": 13,
+    "lost": 10,
+    "pct": 76.92307692307692
+   },
+   "not nested": {
+    "n": 222,
+    "lost": 17,
+    "pct": 7.657657657657658
+   }
+  },
+  "enrichment_nested": {
+   "criterion": "nested (either strand) vs not nested",
+   "n_pos": 43,
+   "lost_pos": 32,
+   "pct_pos": 74.4186046511628,
+   "n_neg": 222,
+   "lost_neg": 17,
+   "pct_neg": 7.657657657657658,
+   "odds_ratio": 35.080213903743314,
+   "p_value": 8.668158947802243e-20
+  },
+  "enrichment_exonic90": {
+   "criterion": "exonic overlap >= 90% vs < 90%",
+   "n_pos": 37,
+   "lost_pos": 36,
+   "pct_pos": 97.29729729729729,
+   "n_neg": 228,
+   "lost_neg": 13,
+   "pct_neg": 5.701754385964913,
+   "odds_ratio": 595.3846153846154,
+   "p_value": 2.3902145762989496e-32
+  },
+  "exonic_bins": {
+   "<50%": {
+    "n": 222,
+    "lost": 11
+   },
+   "50-90%": {
+    "n": 6,
+    "lost": 2
+   },
+   ">=90%": {
+    "n": 37,
+    "lost": 36
+   }
+  },
+  "sensitivity_legacy_median_gt1": {
+   "n_legacy_detected": 244,
+   "enrichment_exonic90": {
+    "criterion": "exonic >= 90%, legacy median > 1",
+    "n_pos": 31,
+    "lost_pos": 30,
+    "pct_pos": 96.7741935483871,
+    "n_neg": 213,
+    "lost_neg": 6,
+    "pct_neg": 2.816901408450704,
+    "odds_ratio": 1035.0,
+    "p_value": 2.3900937389461993e-31
+   }
+  },
+  "sensitivity_detection_thresholds": {
+   "det>0.5_lost<=0.1": {
+    "criterion": "detected >0.5, lost <=0.1",
+    "n_pos": 37,
+    "lost_pos": 36,
+    "pct_pos": 97.29729729729729,
+    "n_neg": 228,
+    "lost_neg": 13,
+    "pct_neg": 5.701754385964913,
+    "odds_ratio": 595.3846153846154,
+    "p_value": 2.3902145762989496e-32
+   },
+   "det>0.8_lost<=0.02": {
+    "criterion": "detected >0.8, lost <=0.02",
+    "n_pos": 30,
+    "lost_pos": 28,
+    "pct_pos": 93.33333333333333,
+    "n_neg": 214,
+    "lost_neg": 1,
+    "pct_neg": 0.4672897196261682,
+    "odds_ratio": 2982.0,
+    "p_value": 2.7152970090917957e-33
+   },
+   "det>0.9_lost<=0": {
+    "criterion": "detected >0.9, lost <=0",
+    "n_pos": 28,
+    "lost_pos": 26,
+    "pct_pos": 92.85714285714286,
+    "n_neg": 197,
+    "lost_neg": 1,
+    "pct_neg": 0.5076142131979695,
+    "odds_ratio": 2548.0,
+    "p_value": 1.2763196739815483e-30
+   },
+   "det>0.3_lost<=0.2": {
+    "criterion": "detected >0.3, lost <=0.2",
+    "n_pos": 38,
+    "lost_pos": 37,
+    "pct_pos": 97.36842105263158,
+    "n_neg": 228,
+    "lost_neg": 14,
+    "pct_neg": 6.140350877192983,
+    "odds_ratio": 565.5714285714286,
+    "p_value": 1.6732918012338563e-32
+   }
+  },
+  "exonic90_lost_vs_kept": {
+   "lost": {
+    "n": 36,
+    "median_legacy_median": 18.465874999999997,
+    "median_legacy_detection": 1.0,
+    "median_exon_cov": 100.0,
+    "pct_on_gdc_nested_list": 88.88888888888889,
+    "median_exonic_bp": 872.0,
+    "median_n_partners": 1.0,
+    "biotypes": {
+     "protein_coding": 19,
+     "snoRNA": 8,
+     "scaRNA": 3,
+     "transcribed_processed_pseudogene": 2,
+     "ribozyme": 1,
+     "lncRNA": 1
+    }
+   },
+   "kept": {
+    "n": 1,
+    "median_legacy_median": 100.27705,
+    "median_legacy_detection": 1.0,
+    "median_exon_cov": 100.0,
+    "pct_on_gdc_nested_list": 100.0,
+    "median_exonic_bp": 1241.0,
+    "median_n_partners": 2.0,
+    "biotypes": {
+     "protein_coding": 1
+    }
+   }
+  }
+ }
+}

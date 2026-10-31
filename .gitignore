@@ -45,3 +45,7 @@ __pycache__/
 *.pyc
 .DS_Store
 .ipynb_checkpoints/
+
+# --- テストバンドル(小さい固定入力。*.tsv の除外より優先する) ---
+!test/**/*.tsv
+!test/**/*.tsv.gz

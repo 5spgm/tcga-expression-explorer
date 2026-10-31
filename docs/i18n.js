@@ -170,7 +170,7 @@ const STRINGS = {
     subtypeLabel: "Tumor grouping",
     subtypeNone: "None (Tumor / Normal tissue)",
     extraTumor: "Include metastatic / recurrent",
-    extraTumorWithCount: (n) => `Include metastatic / recurrent (${n} samples)`,
+    extraTumorWithCount: (n) => `Include metastatic / recurrent (${n} ${n === 1 ? "sample" : "samples"})`,
     extraTumorNone: "No metastatic or recurrent samples for this cancer type",
     extraTumorHint: (detail) => `Primary tumors only by default. Breakdown: ${detail}`,
     logScale: "log2(x+1) scale",
