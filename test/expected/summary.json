@@ -10,31 +10,31 @@
   "n_legacy_detected": 265,
   "by_group": {
    "nested same strand": {
-    "n": 30,
-    "lost": 22,
-    "pct": 73.33333333333333
+    "n": 25,
+    "lost": 23,
+    "pct": 92.0
    },
    "nested opposite strand": {
-    "n": 13,
+    "n": 11,
     "lost": 10,
-    "pct": 76.92307692307692
+    "pct": 90.9090909090909
    },
    "not nested": {
-    "n": 222,
-    "lost": 17,
-    "pct": 7.657657657657658
+    "n": 229,
+    "lost": 16,
+    "pct": 6.986899563318778
    }
   },
   "enrichment_nested": {
    "criterion": "nested (either strand) vs not nested",
-   "n_pos": 43,
-   "lost_pos": 32,
-   "pct_pos": 74.4186046511628,
-   "n_neg": 222,
-   "lost_neg": 17,
-   "pct_neg": 7.657657657657658,
-   "odds_ratio": 35.080213903743314,
-   "p_value": 8.668158947802243e-20
+   "n_pos": 36,
+   "lost_pos": 33,
+   "pct_pos": 91.66666666666667,
+   "n_neg": 229,
+   "lost_neg": 16,
+   "pct_neg": 6.986899563318778,
+   "odds_ratio": 146.4375,
+   "p_value": 1.453593486440891e-26
   },
   "enrichment_exonic90": {
    "criterion": "exonic overlap >= 90% vs < 90%",
@@ -127,7 +127,7 @@
     "median_legacy_median": 18.465874999999997,
     "median_legacy_detection": 1.0,
     "median_exon_cov": 100.0,
-    "pct_on_gdc_nested_list": 88.88888888888889,
+    "pct_on_gdc_nested_list": 91.66666666666666,
     "median_exonic_bp": 872.0,
     "median_n_partners": 1.0,
     "biotypes": {
@@ -144,7 +144,7 @@
     "median_legacy_median": 100.27705,
     "median_legacy_detection": 1.0,
     "median_exon_cov": 100.0,
-    "pct_on_gdc_nested_list": 100.0,
+    "pct_on_gdc_nested_list": 0.0,
     "median_exonic_bp": 1241.0,
     "median_n_partners": 2.0,
     "biotypes": {

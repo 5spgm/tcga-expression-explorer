@@ -156,7 +156,7 @@ def cohort_table(mat_dir: Path, cohort: str, excluded: set[str], nested: dict, e
     })
     sym2ens = {v: k for k, v in ens2sym.items() if v in unique_syms}
     tab["gene_id"] = [sym2ens.get(s, "") for s in tab["symbol"]]
-    tab["group"] = [nested.get(s, "not nested") for s in tab["symbol"]]
+    tab["group"] = [nested.get(g, "not nested") for g in tab["gene_id"]]
     tab["exon_cov"] = [exon_cov.get(g, 0.0) for g in tab["gene_id"]]
     tab["legacy_detected"] = tab["det_old"] > DET_LEGACY
     tab["lost_in_gdc"] = tab["legacy_detected"] & (tab["det_mid"] <= LOST_GDC) & (tab["det_new"] <= LOST_GDC)
@@ -223,9 +223,12 @@ def main():
     out = Path(args.out_dir); out.mkdir(parents=True, exist_ok=True)
     st = pd.read_csv(args.nested_stranded, sep="\t")
     un = pd.read_csv(args.nested_strandless, sep="\t")
-    nested = {s: "nested same strand" for s in st["gene_name"].astype(str)}
-    for s in un["gene_name"].astype(str):
-        nested.setdefault(s, "nested opposite strand")
+    # match on the versionless Ensembl gene_id, not on the symbol: the lists carry
+    # GENCODE v22-era names (e.g. RNaseP_nuc for ENSG00000277209 = RPPH1), and symbols
+    # are neither stable across releases nor unique.
+    nested = {s.split(".")[0]: "nested same strand" for s in st["gene_id"].astype(str)}
+    for s in un["gene_id"].astype(str):
+        nested.setdefault(s.split(".")[0], "nested opposite strand")
     ex = pd.read_csv(args.exon_overlap, sep="\t")
     if "exon_cov_union" in ex.columns:
         # strand-agnostic union of every other gene's exons: the quantity that
