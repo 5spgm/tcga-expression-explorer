@@ -1,0 +1,36 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite both the software and the accompanying article."
+title: "TCGA Expression Explorer"
+abstract: >-
+  A static web tool that shows the expression of one gene, in one TCGA cohort, under all three
+  generations of TCGA gene-level RNA-seq quantification side by side, on the same specimens,
+  optionally split by published molecular-subtype schemes.
+type: software
+authors:
+  - family-names: Tange
+    given-names: Shoichiro
+    orcid: "https://orcid.org/0000-0002-2126-6938"
+    affiliation: "Sapporo Medical University School of Medicine"
+  - family-names: Idogawa
+    given-names: Masashi
+    orcid: "https://orcid.org/0000-0002-8507-1726"
+    affiliation: "Sapporo Medical University School of Medicine"
+repository-code: "https://github.com/5spgm/tcga-expression-explorer"
+url: "https://5spgm.github.io/tcga-expression-explorer/"
+license: MIT
+version: 1.0.0
+date-released: "2026-11-24"
+keywords:
+  - TCGA
+  - RNA-seq
+  - gene expression
+  - data re-processing
+  - gene annotation
+  - reproducibility
+references:
+  - type: data
+    title: "TCGA Expression Explorer: source data"
+    doi: "10.5281/zenodo.22670234"
+    authors:
+      - family-names: Tange
+        given-names: Shoichiro

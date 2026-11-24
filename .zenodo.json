@@ -1,0 +1,16 @@
+{
+  "title": "TCGA Expression Explorer",
+  "description": "A static web tool that shows the expression of one gene, in one TCGA cohort, under all three generations of TCGA gene-level RNA-seq quantification side by side, on the same specimens, optionally split by published molecular-subtype schemes. This record archives the source code; the underlying matrices are deposited separately (doi:10.5281/zenodo.22670234).",
+  "upload_type": "software",
+  "license": "mit",
+  "access_right": "open",
+  "creators": [
+    {"name": "Tange, Shoichiro", "affiliation": "Sapporo Medical University School of Medicine", "orcid": "0000-0002-2126-6938"},
+    {"name": "Idogawa, Masashi", "affiliation": "Sapporo Medical University School of Medicine", "orcid": "0000-0002-8507-1726"}
+  ],
+  "keywords": ["TCGA", "RNA-seq", "gene expression", "data re-processing", "gene annotation", "reproducibility"],
+  "related_identifiers": [
+    {"identifier": "10.5281/zenodo.22670234", "relation": "isSupplementTo", "scheme": "doi"},
+    {"identifier": "https://5spgm.github.io/tcga-expression-explorer/", "relation": "isDocumentedBy", "scheme": "url"}
+  ]
+}
